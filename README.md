@@ -1,2 +1,2 @@
-Biite Ihre Daten in die jeweiligen Unterordner ablegen
+Bitte Ihre Daten in die jeweiligen Unterordner ablegen
 

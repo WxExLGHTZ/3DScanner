@@ -1,15 +1,16 @@
-# Fachuebergreifendes Projekt: Thema
+# Fachuebergreifendes Projekt: 3D-Scanner mit einer Intel RealSense
 
-Hier bitte 2-3 Sätze die Ihr Thema beschreiben
+Ziel des Projektes ist es ein Produkt zu schaffen mit dem jeder Interessierte die Option hat diverse Objekte zu digitalisieren. 
+Es soll die Möglichkeit geboten werden die Objekte zu scannen und daraus 3D – Modelle zu erstellen.
 
 ## Authoren
 
 Hier bitte Ihre Namen ergänzen
 
-1. Name1
-2. Name2
-3. Name3
-4. Name4
+1. Vinh Thong Trinh
+2. Mert Karadeniz
+3. Habib Ben Khedher
+4. William Eppel
 
 ## Hinweise
 

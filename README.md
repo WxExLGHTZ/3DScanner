@@ -3,7 +3,7 @@
 Ziel des Projektes ist es ein Produkt zu schaffen mit dem jeder Interessierte die Option hat diverse Objekte zu digitalisieren.
 Es soll die Möglichkeit geboten werden die Objekte zu scannen und daraus 3D – Modelle zu erstellen.
 
-## Authoren
+## Autoren
 
 - Teammitglieder:
   1. Vinh Thong Trinh

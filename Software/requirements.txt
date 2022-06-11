@@ -1,0 +1,6 @@
+#
+####### requirements.txt #######
+#
+PyQt5
+###### Requirements with Version Specifiers ######
+#

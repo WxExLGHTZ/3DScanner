@@ -20,6 +20,13 @@ Es soll die Möglichkeit geboten werden die Objekte zu scannen und daraus 3D –
 
 ### Voraussetzungen + Installation:
 
+Voraussetzungen:
+
+1. PyCharm oder Visual Studio Code
+2. Python 3.8.x
+3. PyQt5
+4. Git
+
 **Python Installation**
 
 1. Installieren Sie [Python3.8](https://www.python.org/downloads/release/python-380/) den Windows x86-64 executable installer

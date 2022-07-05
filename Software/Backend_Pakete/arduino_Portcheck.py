@@ -1,4 +1,7 @@
 import serial.tools.list_ports
+import pyrealsense2 as rs
+
+
 
 def check_arduino_connection():
     ports = list(serial.tools.list_ports.comports())
@@ -9,12 +12,23 @@ def check_arduino_connection():
 
         check = str(p).find(string)
 
-        if check == -1:
-            print("Arduino nicht verbunden")
+        if check != -1:
 
-        else:
             print("Arduino verbunden")
+            return True
 
+
+    return False
+
+
+def check_realsense_connection():
+    try:
+        pipe = rs.pipeline()
+        profile = pipe.start()
+        return True
+
+    except:
+        return False
 
 
 

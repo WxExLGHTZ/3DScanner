@@ -362,7 +362,7 @@ class Ui_MainWindow(PageWindow):
     def importFile(self):
         """Startet QFileDialog. Eine .ply oder .stl Datei kann ausgewählt werden. """
         fileDialog, _ = QFileDialog.getOpenFileName(self, "Punktwolke Datei öffnen", "",
-                                                    "PC Format (*.ply *.asc *.pcd)")
+                                                    "PC Format (*.ply *.asc)")
         file_path, file_ext = os.path.splitext(fileDialog)
 
         if file_ext == ".ply":
@@ -372,19 +372,19 @@ class Ui_MainWindow(PageWindow):
             PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.ply"
             pcd = o3d.io.read_point_cloud(PLYFile)
             o3d.visualization.draw_geometries([pcd])
-        elif file_ext == ".pcd":
-            dataPath = "./Frontend_Pakete/data/importedPCDFile.pcd"
-            shutil.copy(fileDialog, dataPath)
-            PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.ply"
-            pcd = o3d.io.read_point_cloud(PLYFile)
-            o3d.visualization.draw_geometries([pcd])
-        elif file_ext == ".stl":
-            dataPath = "./Frontend_Pakete/data/importedSTLFile.stl"
-            shutil.copy(fileDialog, dataPath)
-
-            STLFile = os.getcwd() + "/Frontend_Pakete/data/importedSTLFile.stl"
-
-            o3d.visualization.draw_geometries([STLFile], zoom=0.8)
+        # elif file_ext == ".pcd":
+        #     dataPath = "./Frontend_Pakete/data/importedPCDFile.pcd"
+        #     shutil.copy(fileDialog, dataPath)
+        #     PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.ply"
+        #     pcd = o3d.io.read_point_cloud(PLYFile)
+        #     o3d.visualization.draw_geometries([pcd])
+        # elif file_ext == ".stl":
+        #     dataPath = "./Frontend_Pakete/data/importedSTLFile.stl"
+        #     shutil.copy(fileDialog, dataPath)
+        #
+        #     STLFile = os.getcwd() + "/Frontend_Pakete/data/importedSTLFile.stl"
+        #
+        #     o3d.visualization.draw_geometries([STLFile], zoom=0.8)
 
     def saveFile(self):
         """Speichern der Punktwolke/Mesh file (.stl)"""

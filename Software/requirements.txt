@@ -2,5 +2,7 @@
 ####### requirements.txt #######
 #
 PyQt5
+opencv-python
+open3d
 ###### Requirements with Version Specifiers ######
 #

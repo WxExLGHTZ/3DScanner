@@ -4,5 +4,7 @@
 PyQt5
 opencv-python
 open3d
+pyrealsense2
+pyserial
 ###### Requirements with Version Specifiers ######
 #

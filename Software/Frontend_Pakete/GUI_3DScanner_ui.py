@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QTimer, QPoint
 from PyQt5.QtWidgets import QWidget, QAction, QHBoxLayout
-from PyQt5.QtGui import QPainter, QImage
+from PyQt5.QtGui import QIntValidator, QFont
 import cv2
 import open3d as o3d
 import sys
@@ -14,60 +14,13 @@ import queue as Queue
 import os
 import shutil
 
-IMG_SIZE = 1920, 1080  # 640,480 or 1280,720 or 1920,1080
-IMG_FORMAT = QImage.Format_RGB888
-DISP_SCALE = 2  # Scaling factor for display image
-DISP_MSEC = 50  # Delay between display cycles
-CAP_API = cv2.CAP_ANY  # API: CAP_ANY or CAP_DSHOW etc...
-EXPOSURE = 0  # Zero for automatic exposure
-camera_num = 1  # Default camera (first in list)
-image_queue = Queue.Queue()  # Queue to hold images
-capturing = True
+from Software.Backend_Pakete.export_scan import *
 
 
-# region Cam Methods + Image Class
-def grab_images(cam_num, queue):
-    cap = cv2.VideoCapture(cam_num - 1 + CAP_API)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, IMG_SIZE[0])
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, IMG_SIZE[1])
-    if EXPOSURE:
-        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)
-        cap.set(cv2.CAP_PROP_EXPOSURE, EXPOSURE)
-    else:
-        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
-    while capturing:
-        if cap.grab():
-            retval, image = cap.retrieve(0)
-            if image is not None and queue.qsize() < 2:
-                queue.put(image)
-            else:
-                time.sleep(DISP_MSEC / 1000.0)
-        else:
-            print("Error: can't grab camera image")
-            break
-    cap.release()
+# TODO - Statusbar in Setings
+# TODO - OpenCV Cam raus nehmen, GUI Kleiner, nut buttons, buttons breiter,gräßer
+# TODO -
 
-
-class ImageWidget(QWidget):
-    def __init__(self, parent=None):
-        super(ImageWidget, self).__init__(parent)
-        self.image = None
-
-    def setImage(self, image):
-        self.image = image
-        self.setGeometry(QtCore.QRect(50, 50, 50, 50))
-        self.setMinimumSize(image.size())
-        self.update()
-
-    def paintEvent(self, event):
-        qp = QPainter()
-        qp.begin(self)
-        if self.image:
-            qp.drawImage(QPoint(0, 0), self.image)
-        qp.end()
-
-
-# endregion
 
 # region PageWindows, HelpWindow, SettingWindow
 class PageWindow(QMainWindow):
@@ -115,8 +68,8 @@ class SettingsWindow(PageWindow):
 
     def initUi(self):
         self.setWindowTitle("Settings")
-        width = 900
-        height = 470
+        width = 350
+        height = 420
         self.resize(width, height)
         self.setMaximumSize(QtCore.QSize(width, height))
         self.setMinimumSize(QtCore.QSize(width, height))
@@ -124,38 +77,54 @@ class SettingsWindow(PageWindow):
         self.UiComponents()
 
     def goBack(self):
-        global capturing
-        capturing = True
         self.goto("main")
 
     def UiComponents(self):
+
+        self.statusBar = QtWidgets.QStatusBar(self)
+        self.statusBar.setGeometry(QtCore.QRect(0, 400, 400, 20))
+        self.statusBar.showMessage("Statusbar test")
+
         self.portLabel = QtWidgets.QLabel(self)
         self.portLabel.setText("Serial Port Eingabe")
-        self.portLabel.setGeometry(QtCore.QRect(120, 50, 150, 30))
+        self.portLabel.setGeometry(QtCore.QRect(40, 30, 150, 30))
 
         self.port = QtWidgets.QLineEdit(self)
-        self.port.setText(str(camera_num))
+        self.port.setText(str(1))
         self.port.setObjectName("portText")
-        self.port.setGeometry(QtCore.QRect(250, 50, 30, 30))
+        self.onlyInt = QIntValidator()
+        self.port.setValidator(self.onlyInt)
+        self.port.setAlignment(QtCore.Qt.AlignCenter)
+        self.port.setGeometry(QtCore.QRect(190, 30, 30, 30))
         self.port.setMinimumSize(QtCore.QSize(30, 30))
         self.port.setMaximumSize(QtCore.QSize(30, 30))
 
+        self.verticalLayoutWidget = QtWidgets.QWidget(self)
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(70, 300, 200, 100))
+        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout.setObjectName("verticalLayout")
+
         self.backButton = QtWidgets.QPushButton("Back to Main", self)
-        self.backButton.setGeometry(QtCore.QRect(750, 50, 160, 400))
-        self.backButton.setMinimumSize(QtCore.QSize(120, 40))
-        self.backButton.setMaximumSize(QtCore.QSize(120, 40))
+        self.backButton.setGeometry(QtCore.QRect(70, 360, 160, 400))
+        self.backButton.setMinimumSize(QtCore.QSize(200, 40))
+        self.backButton.setMaximumSize(QtCore.QSize(200, 40))
         self.backButton.clicked.connect(self.goBack)
 
+
         self.saveButton = QtWidgets.QPushButton("Save", self)
-        self.saveButton.setGeometry(QtCore.QRect(750, 200, 160, 400))
-        self.saveButton.setMinimumSize(QtCore.QSize(120, 40))
-        self.saveButton.setMaximumSize(QtCore.QSize(120, 40))
+        self.saveButton.setGeometry(QtCore.QRect(70, 320, 160, 400))
+        self.saveButton.setMinimumSize(QtCore.QSize(200, 40))
+        self.saveButton.setMaximumSize(QtCore.QSize(200, 40))
         self.saveButton.clicked.connect(self.SaveSettings)
 
+        self.verticalLayout.addWidget(self.saveButton)
+        self.verticalLayout.addWidget(self.backButton)
+
     def SaveSettings(self):
-        global camera_num
         pText = self.port.text()
-        camera_num = int(pText)
+        print(pText)
 
 
 # endregion
@@ -169,83 +138,30 @@ class Ui_MainWindow(PageWindow):
         self.UiComponents()
         self.setWindowTitle("3D Scanner")
 
-    # region Cam Methods
-    def startCam(self):
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(lambda:
-                                   self.show_image(image_queue, self.disp, DISP_SCALE))
-        self.timer.start(DISP_MSEC)
-        self.capture_thread = threading.Thread(target=grab_images,
-                                               args=(camera_num, image_queue))
-        self.capture_thread.start()
-
-    def stopCam(self):
-        global capturing
-        capturing = False
-        self.capture_thread.join()
-        cap = cv2.VideoCapture(1 - 1 + CAP_API)
-        cap.release()
-
-    def show_image(self, imageq, display, scale):
-        if not imageq.empty():
-            image = imageq.get()
-            if image is not None and len(image) > 0:
-                img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                self.display_image(img, display, scale)
-
-    def display_image(self, img, display, scale=1):
-        disp_size = img.shape[1] // scale, img.shape[0] // scale
-        disp_bpl = disp_size[0] * 3
-        if scale > 1:
-            img = cv2.resize(img, disp_size, interpolation=cv2.INTER_CUBIC)
-            qimg = QImage(img.data, disp_size[0], disp_size[1], disp_bpl, IMG_FORMAT)
-        display.setImage(qimg)
-
-    # endregion
-
     def UiComponents(self):
         app.aboutToQuit.connect(self.closeEvent)
-        self.startCam()
         self.setWindowTitle("3D Scanner")
 
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
 
-        self.displays = QHBoxLayout(self.centralwidget)
-        self.disp = ImageWidget(self)
-        self.displays.addWidget(self.disp)
-
-        buttonWidth = 120
+        buttonWidth = 200
         buttonHeight = 40
         btnSize = QtCore.QSize(buttonWidth, buttonHeight)
 
         self.statusBar = QtWidgets.QStatusBar(self.centralwidget)
-        self.statusBar.setGeometry(QtCore.QRect(0, 480, 900, 20))
+        self.statusBar.setGeometry(QtCore.QRect(0, 400, 400, 20))
         self.statusBar.showMessage("Statusbar test")
 
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(750, 30, 160, 450))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(70, 20, 200, 450))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
 
-        self.starteKameraBtn = QtWidgets.QPushButton()
-        self.starteKameraBtn.setGeometry(QtCore.QRect(750, 330, 160, 450))
-        self.starteKameraBtn.setMinimumSize(btnSize)
-        self.starteKameraBtn.setMaximumSize(btnSize)
-        self.starteKameraBtn.setObjectName("starteCamTest")
-        self.verticalLayout.addWidget(self.starteKameraBtn)
-
-        self.stopKameraBtn = QtWidgets.QPushButton()
-        self.stopKameraBtn.setGeometry(QtCore.QRect(750, 330, 160, 450))
-        self.stopKameraBtn.setMinimumSize(btnSize)
-        self.stopKameraBtn.setMaximumSize(btnSize)
-        self.stopKameraBtn.setObjectName("stopCamTest")
-        self.verticalLayout.addWidget(self.stopKameraBtn)
-
         self.helpButton = QtWidgets.QPushButton()
-        self.helpButton.setGeometry(QtCore.QRect(750, 380, 160, 450))
+        self.helpButton.setGeometry(QtCore.QRect(20, 380, 160, 450))
         self.helpButton.setMinimumSize(btnSize)
         self.helpButton.setMaximumSize(btnSize)
         self.helpButton.setObjectName("helpButton")
@@ -304,21 +220,16 @@ class Ui_MainWindow(PageWindow):
 
         # button connect
         self.startScanButton.clicked.connect(self.startScan)
-        self.stopScanButton.clicked.connect(self.stopCam)
+        self.stopScanButton.clicked.connect(self.stopScan)
         self.importButton.clicked.connect(self.importFile)
         self.saveButton.clicked.connect(self.saveFile)
         self.settingsButton.clicked.connect(self.make_handleButton("settingsButton"))
         self.helpButton.clicked.connect(self.helpMainWindow)
         self.quitButton.clicked.connect(self.quitApp)
-        self.starteKameraBtn.clicked.connect(self.startCam)
-        self.stopKameraBtn.clicked.connect(self.stopCam)
 
-        self.mainMenu = self.menuBar()
         exitAction = QAction('&Exit', self)
         exitAction.setShortcut('Ctrl+Q')
-        exitAction.triggered.connect(self.closeEvent)
-        self.fileMenu = self.mainMenu.addMenu('&File')
-        self.fileMenu.addAction(exitAction)
+        exitAction.triggered.connect(self.quitApp)
 
         self.retranslateUi(self)
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -333,8 +244,6 @@ class Ui_MainWindow(PageWindow):
         self.settingsButton.setText(_translate("MainWindow", "Settings"))
         self.quitButton.setText(_translate("MainWindow", "Quit"))
         self.helpButton.setText(_translate("MainWindow", "Help"))
-        self.starteKameraBtn.setText(_translate("MainWindow", "Start Cam"))
-        self.stopKameraBtn.setText(_translate("MainWindow", "Stop Cam"))
 
     # region Button Funktionalitäten
 
@@ -344,10 +253,6 @@ class Ui_MainWindow(PageWindow):
 
     def make_handleButton(self, button):
         def handleButton():
-            # global capturing
-            # capturing = False
-            # self.capture_thread.join()
-            self.stopCam()
             if button == "settingsButton":
                 self.goto("settings")
 
@@ -362,7 +267,7 @@ class Ui_MainWindow(PageWindow):
     def importFile(self):
         """Startet QFileDialog. Eine .ply oder .stl Datei kann ausgewählt werden. """
         fileDialog, _ = QFileDialog.getOpenFileName(self, "Punktwolke Datei öffnen", "",
-                                                    "PC Format (*.ply *.asc)")
+                                                    "PC Format (*.ply)")
         file_path, file_ext = os.path.splitext(fileDialog)
 
         if file_ext == ".ply":
@@ -371,7 +276,15 @@ class Ui_MainWindow(PageWindow):
 
             PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.ply"
             pcd = o3d.io.read_point_cloud(PLYFile)
-            o3d.visualization.draw_geometries([pcd])
+            o3d.visualization.draw_geometries([pcd],
+                                              width=500,
+                                              height=500,
+                                              window_name="Imported Point Cloud")
+        # else:
+        #     msg = "This .ply file seems broken. Try another."
+        #     q = QMessageBox(QMessageBox.Warning, "...", QString(msg))
+        #     q.setStandardButtons(QMessageBox.OK)
+        #     q.exec_()
         # elif file_ext == ".pcd":
         #     dataPath = "./Frontend_Pakete/data/importedPCDFile.pcd"
         #     shutil.copy(fileDialog, dataPath)
@@ -391,20 +304,13 @@ class Ui_MainWindow(PageWindow):
 
     def quitApp(self):
         """Programm beenden"""
-        close = QtWidgets.QMessageBox.question(self, "QUIT", "Are you sure you want to stop process?",
+        close = QtWidgets.QMessageBox.question(self, "QUIT", "Are you sure you want to quit?",
                                                QMessageBox.No | QMessageBox.Yes)
         if close == QMessageBox.Yes:
-            global capturing
-            capturing = False
-            self.capture_thread.join()
             QtCore.QCoreApplication.instance().quit()
 
     def closeEvent(self):
-        global capturing
-        capturing = False
-        self.capture_thread.join()
         QtCore.QCoreApplication.instance().quit()
-
     # endregion
 
 
@@ -412,8 +318,9 @@ class Ui_MainWindow(PageWindow):
 class Window(QMainWindow):
     def __init__(self):
         super().__init__(parent=None)
-        width = 900
-        height = 500
+        width = 350
+        height = 420
+
         self.setWindowTitle("3D Scanner")
         self.setObjectName("MainWindow")
         self.resize(width, height)
@@ -443,17 +350,9 @@ class Window(QMainWindow):
 # endregion
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        try:
-            camera_num = int(sys.argv[1])
-        except:
-            camera_num = 0
-    if camera_num < 1:
-        print("Invalid camera number '%s'" % sys.argv[1])
-    else:
-        app = QtWidgets.QApplication(sys.argv)
-        # seting = SettingsWindow()
-        # seting.show()
-        w = Window()
-        w.show()
-        sys.exit(app.exec_())
+    app = QtWidgets.QApplication(sys.argv)
+    # seting = SettingsWindow()
+    # seting.show()
+    w = Window()
+    w.show()
+    sys.exit(app.exec_())

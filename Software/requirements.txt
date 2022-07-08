@@ -2,7 +2,10 @@
 ####### requirements.txt #######
 #
 PyQt5
-opencv-python
 open3d
+pyrealsense2
+pyserial
 ###### Requirements with Version Specifiers ######
 #
+# for mac users
+# pip install pyrealsense2 -f https://github.com/cansik/pyrealsense2-macosx/releases

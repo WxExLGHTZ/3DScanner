@@ -12,13 +12,23 @@ class InitializeScan():
         self.framerate = framerate
         self.autoexposureFrames = autoexposureFrames
         self.pipe = rs.pipeline()
+        self.align = None
         self.config = rs.config()
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.any, self.framerate)
         self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.any, self.framerate)
 
         self.color_image = None
         self.depth_image = None
+        self.color_frame = None
+        self.depth_frame = None
         self.intrinsic = None
+
+        self.w = None
+        self.h = None
+        self.fx = None
+        self.fy = None
+        self.px = None
+        self.py = None
 
         #wird benutzt in process_data.py
         #self.depth_image

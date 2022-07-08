@@ -19,9 +19,18 @@ initScanObj.stopPipeline()
 
 initScanObj.takeFoto()
 
+color_image = initScanObj.color_igm()
+
+int = initScanObj.intrinsic()
+
+
+
+
 processDataObj = ProcessData()
 
 # angle kommt von startscan statt der 0
+processDataObj.processFoto(0,initScanObj.depth_igm(),initScanObj.color_image(),initScanObj.intrinsic())
+
 processDataObj.processFoto(0,initScanObj.depth_igm(),initScanObj.color_image(),initScanObj.intrinsic())
 
 exportScanObj = ExportScan()

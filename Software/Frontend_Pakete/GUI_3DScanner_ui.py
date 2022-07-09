@@ -5,22 +5,31 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QTimer, QPoint
 from PyQt5.QtWidgets import QWidget, QAction, QHBoxLayout
 from PyQt5.QtGui import QIntValidator, QFont
-import cv2
 import open3d as o3d
 import sys
-import time
-import threading
-import queue as Queue
 import os
 import shutil
 
-from Software.Backend_Pakete.export_scan import *
+# from Software.Backend_Pakete.export_scan import *
+from Software.Backend_Pakete.scan import *
+# from Software.Backend_Pakete.arduino_Portcheck import *
+#from Software.Backend_Pakete.proviMain import *
+from Software.Backend_Pakete.arduino import *
+from Software.Backend_Pakete.initialize_scan import *
+from Software.Backend_Pakete.process_data import *
 
 
 # TODO - Statusbar in Setings
 # TODO - OpenCV Cam raus nehmen, GUI Kleiner, nut buttons, buttons breiter,gräßer
 # TODO -
 
+# ARDUINO - global variables
+ardPort = "COM3"
+baudRate = 9600
+# SCAN - global variables
+widthFrame = 84
+heightFrame = 480
+stepSize = 256
 
 # region PageWindows, HelpWindow, SettingWindow
 class PageWindow(QMainWindow):
@@ -81,23 +90,64 @@ class SettingsWindow(PageWindow):
 
     def UiComponents(self):
 
+        inputWidth = 170
+        inputHeight = 30
+
+
         self.statusBar = QtWidgets.QStatusBar(self)
         self.statusBar.setGeometry(QtCore.QRect(0, 400, 400, 20))
         self.statusBar.showMessage("Statusbar test")
 
-        self.portLabel = QtWidgets.QLabel(self)
-        self.portLabel.setText("Serial Port Eingabe")
-        self.portLabel.setGeometry(QtCore.QRect(40, 30, 150, 30))
+        self.ArdPortLabel = QtWidgets.QLabel(self)
+        self.ArdPortLabel.setText("COM Port Arduino:")
+        self.ArdPortLabel.setGeometry(QtCore.QRect(10, 10, 150, 30))
 
-        self.port = QtWidgets.QLineEdit(self)
-        self.port.setText(str(1))
-        self.port.setObjectName("portText")
+        self.ArdPort = QtWidgets.QLineEdit(self)
+        self.ArdPort.setText("COM3")
+        self.ArdPort.setObjectName("portText")
+        self.ArdPort.setAlignment(QtCore.Qt.AlignCenter)
+        self.ArdPort.setGeometry(QtCore.QRect(170, 10, 30, 30))
+        self.ArdPort.setFixedSize(inputWidth, inputHeight)
+
+        self.baudRateLabel = QtWidgets.QLabel(self)
+        self.baudRateLabel.setText("Baudrate Arduino:")
+        self.baudRateLabel.setGeometry(QtCore.QRect(10, 50, 150, 30))
+
+        self.baudRate = QtWidgets.QLineEdit(self)
+        self.baudRate.setText(str(9600))
+        self.baudRate.setObjectName("baudrate")
         self.onlyInt = QIntValidator()
-        self.port.setValidator(self.onlyInt)
-        self.port.setAlignment(QtCore.Qt.AlignCenter)
-        self.port.setGeometry(QtCore.QRect(190, 30, 30, 30))
-        self.port.setMinimumSize(QtCore.QSize(30, 30))
-        self.port.setMaximumSize(QtCore.QSize(30, 30))
+        self.baudRate.setValidator(self.onlyInt)
+        self.baudRate.setAlignment(QtCore.Qt.AlignCenter)
+        self.baudRate.setGeometry(QtCore.QRect(170, 50, 30, 30))
+        self.baudRate.setFixedSize(inputWidth, inputHeight)
+
+        self.widthFrameLabel = QtWidgets.QLabel(self)
+        self.widthFrameLabel.setText("Frame width:")
+        self.widthFrameLabel.setGeometry(QtCore.QRect(10, 90, 150, 30))
+
+        self.widthFrame = QtWidgets.QLineEdit(self)
+        self.widthFrame.setText(str(84))
+        self.widthFrame.setObjectName("widthFrame")
+        self.onlyInt = QIntValidator()
+        self.widthFrame.setValidator(self.onlyInt)
+        self.widthFrame.setAlignment(QtCore.Qt.AlignCenter)
+        self.widthFrame.setGeometry(QtCore.QRect(170, 90, 30, 30))
+        self.widthFrame.setFixedSize(inputWidth, inputHeight)
+
+        self.heightFrameLabel = QtWidgets.QLabel(self)
+        self.heightFrameLabel.setText("Frame height:")
+        self.heightFrameLabel.setGeometry(QtCore.QRect(10, 130, 150, 30))
+
+        self.heightFrame = QtWidgets.QLineEdit(self)
+        self.heightFrame.setText(str(480))
+        self.heightFrame.setObjectName("heightFrame")
+        self.onlyInt = QIntValidator()
+        self.heightFrame.setValidator(self.onlyInt)
+        self.heightFrame.setAlignment(QtCore.Qt.AlignCenter)
+        self.heightFrame.setGeometry(QtCore.QRect(170, 130, 30, 30))
+        self.heightFrame.setFixedSize(inputWidth, inputHeight)
+
 
         self.verticalLayoutWidget = QtWidgets.QWidget(self)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(70, 300, 200, 100))
@@ -123,8 +173,17 @@ class SettingsWindow(PageWindow):
         self.verticalLayout.addWidget(self.backButton)
 
     def SaveSettings(self):
-        pText = self.port.text()
-        print(pText)
+        global ardPort, baudRate, widthFrame, heightFrame
+        port = self.ArdPort.text()
+        baudRateGUI = self.baudRate.text()
+        wFrame = self.widthFrame.text()
+        hFrame = self.heightFrame.text()
+
+        ardPort = port
+        baudRate = int(baudRateGUI)
+        widthFrame = int(wFrame)
+        heightFrame = int(hFrame)
+        print(ardPort, baudRate, widthFrame, heightFrame)
 
 
 # endregion
@@ -260,6 +319,34 @@ class Ui_MainWindow(PageWindow):
 
     def startScan(self):
         """Verbindet sich mit der Kamera und startet den Scan Prozess."""
+        # Arduino init - Arduino braucht COMPort(string), baudRate(int),
+        print("test")
+        global ardPort, baudRate, widthFrame, heightFrame, stepSize
+        self.arduino = Arduino(comPort=ardPort, baudRate=baudRate, timeout=0.1)
+        self.scan = Scan(width=widthFrame, height=heightFrame, framerate=30, autoexposureFrames=10)
+        self.initScan = InitializeScan(self.scan.width, self.scan.height, self.scan.framerate, self.scan.autoexposureFrames)
+        try:
+            while True:
+                self.initScan.takeFoto()
+                angle = float(self.arduino.giveAngle())
+                self.colorInit = self.initScan.color_igm()
+                self.depthInit = self.initScan.depth_igm()
+                self.intrinInit = self.initScan.intrinsic()
+                self.arduino.rotate(stepSize)
+                self.processFoto = ProcessData().processFoto(angle, self.colorInit,
+                                                             self.depthInit, self.intrinInit)
+
+        except:
+            print("Kaputt")
+            pass
+        finally:
+            print("stop")
+            # scan stop line
+            # ard close
+            # enablePC = true
+
+
+
 
     def stopScan(self):
         """Stoppt den Scan Prozess."""
@@ -280,31 +367,14 @@ class Ui_MainWindow(PageWindow):
                                               width=500,
                                               height=500,
                                               window_name="Imported Point Cloud")
-        # else:
-        #     msg = "This .ply file seems broken. Try another."
-        #     q = QMessageBox(QMessageBox.Warning, "...", QString(msg))
-        #     q.setStandardButtons(QMessageBox.OK)
-        #     q.exec_()
-        # elif file_ext == ".pcd":
-        #     dataPath = "./Frontend_Pakete/data/importedPCDFile.pcd"
-        #     shutil.copy(fileDialog, dataPath)
-        #     PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.ply"
-        #     pcd = o3d.io.read_point_cloud(PLYFile)
-        #     o3d.visualization.draw_geometries([pcd])
-        # elif file_ext == ".stl":
-        #     dataPath = "./Frontend_Pakete/data/importedSTLFile.stl"
-        #     shutil.copy(fileDialog, dataPath)
-        #
-        #     STLFile = os.getcwd() + "/Frontend_Pakete/data/importedSTLFile.stl"
-        #
-        #     o3d.visualization.draw_geometries([STLFile], zoom=0.8)
+
 
     def saveFile(self):
         """Speichern der Punktwolke/Mesh file (.stl)"""
 
     def quitApp(self):
         """Programm beenden"""
-        close = QtWidgets.QMessageBox.question(self, "QUIT", "Are you sure you want to quit?",
+        close = QtWidgets.QMessageBox.question(self, "Quit", "Are you sure you want to quit?",
                                                QMessageBox.No | QMessageBox.Yes)
         if close == QMessageBox.Yes:
             QtCore.QCoreApplication.instance().quit()

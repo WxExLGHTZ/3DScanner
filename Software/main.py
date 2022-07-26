@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from Frontend_Pakete import *
-# from Backend_Pakete.arduino_Portcheck import *
+from Backend_Pakete.arduino_Portcheck import *
 
 """ Öffnet die GUI File."""
 
@@ -12,7 +12,7 @@ exec(open("./Frontend_Pakete/GUI_3DScanner_ui.py").read())
 #import PyQt5
 #from PyQt5 import QtWidgets
 
-
+#check_arduino_connection()
 
 #if  check_arduino_connection() == True and check_realsense_connection() == True:
 

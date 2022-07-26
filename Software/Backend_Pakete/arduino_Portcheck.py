@@ -10,6 +10,8 @@ def check_arduino_connection():
 
     for p in ports:
 
+        print(p)
+
         check = str(p).find(string)
 
         if check != -1:

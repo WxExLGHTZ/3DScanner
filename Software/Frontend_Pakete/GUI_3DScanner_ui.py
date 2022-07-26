@@ -1,35 +1,38 @@
 #!/usr/bin/python
-
+import PyQt5.QtWidgets
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QTimer, QPoint
-from PyQt5.QtWidgets import QWidget, QAction, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QAction, QHBoxLayout, QFileDialog
 from PyQt5.QtGui import QIntValidator, QFont
 import open3d as o3d
 import sys
 import os
 import shutil
+import ntpath
 
-# from Software.Backend_Pakete.export_scan import *
+
+
+from Software.Backend_Pakete.export_scan import *
 from Software.Backend_Pakete.scan import *
 # from Software.Backend_Pakete.arduino_Portcheck import *
-#from Software.Backend_Pakete.proviMain import *
+# from Software.Backend_Pakete.proviMain import *
 from Software.Backend_Pakete.arduino import *
 from Software.Backend_Pakete.initialize_scan import *
 from Software.Backend_Pakete.process_data import *
-
 
 # TODO - Statusbar in Setings
 # TODO - OpenCV Cam raus nehmen, GUI Kleiner, nut buttons, buttons breiter,gräßer
 # TODO -
 
 # ARDUINO - global variables
-ardPort = "COM3"
+ardPort = "COM5"
 baudRate = 9600
 # SCAN - global variables
-widthFrame = 84
+widthFrame = 848
 heightFrame = 480
 stepSize = 256
+
 
 # region PageWindows, HelpWindow, SettingWindow
 class PageWindow(QMainWindow):
@@ -89,10 +92,8 @@ class SettingsWindow(PageWindow):
         self.goto("main")
 
     def UiComponents(self):
-
         inputWidth = 170
         inputHeight = 30
-
 
         self.statusBar = QtWidgets.QStatusBar(self)
         self.statusBar.setGeometry(QtCore.QRect(0, 400, 400, 20))
@@ -148,7 +149,6 @@ class SettingsWindow(PageWindow):
         self.heightFrame.setGeometry(QtCore.QRect(170, 130, 30, 30))
         self.heightFrame.setFixedSize(inputWidth, inputHeight)
 
-
         self.verticalLayoutWidget = QtWidgets.QWidget(self)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(70, 300, 200, 100))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
@@ -161,7 +161,6 @@ class SettingsWindow(PageWindow):
         self.backButton.setMinimumSize(QtCore.QSize(200, 40))
         self.backButton.setMaximumSize(QtCore.QSize(200, 40))
         self.backButton.clicked.connect(self.goBack)
-
 
         self.saveButton = QtWidgets.QPushButton("Save", self)
         self.saveButton.setGeometry(QtCore.QRect(70, 320, 160, 400))
@@ -191,6 +190,8 @@ class SettingsWindow(PageWindow):
 class Ui_MainWindow(PageWindow):
     def __init__(self, parent=None):
         super().__init__()
+        self.exporSTLs = ExportScan()
+        self.processFotos = ProcessData()
         self.initUI()
 
     def initUI(self):
@@ -320,35 +321,53 @@ class Ui_MainWindow(PageWindow):
     def startScan(self):
         """Verbindet sich mit der Kamera und startet den Scan Prozess."""
         # Arduino init - Arduino braucht COMPort(string), baudRate(int),
-        print("test")
+
         global ardPort, baudRate, widthFrame, heightFrame, stepSize
         self.arduino = Arduino(comPort=ardPort, baudRate=baudRate, timeout=0.1)
         self.scan = Scan(width=widthFrame, height=heightFrame, framerate=30, autoexposureFrames=10)
-        self.initScan = InitializeScan(self.scan.width, self.scan.height, self.scan.framerate, self.scan.autoexposureFrames)
+
+        self.initScan = InitializeScan(self.scan.width, self.scan.height, self.scan.framerate,
+                                       self.scan.autoexposureFrames)
+
+
+
+
+        self.initScan.startPipeline()
+        print("test")
         try:
             while True:
                 self.initScan.takeFoto()
                 angle = float(self.arduino.giveAngle())
                 self.colorInit = self.initScan.color_igm()
                 self.depthInit = self.initScan.depth_igm()
-                self.intrinInit = self.initScan.intrinsic()
+                self.intrinInit = self.initScan.intrinsics()
+
                 self.arduino.rotate(stepSize)
-                self.processFoto = ProcessData().processFoto(angle, self.colorInit,
-                                                             self.depthInit, self.intrinInit)
+                #self.processFotos = ProcessData().processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
+
+                self.processFotos.processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
+                self.arduino.waitForRotation()
+
+                print("hat funktioniert")
+                if angle >= 360:
+                   break
 
         except:
-            print("Kaputt")
-            pass
+            print("error")
         finally:
-            print("stop")
-            # scan stop line
-            # ard close
-            # enablePC = true
 
-
-
+            self.initScan.stopPipeline()
+            self.arduino.close()
+            print("ende process")
 
     def stopScan(self):
+
+
+        o3d.visualization.draw_geometries([self.processFotos.getPointcloud()])
+
+
+
+
         """Stoppt den Scan Prozess."""
 
     def importFile(self):
@@ -368,8 +387,31 @@ class Ui_MainWindow(PageWindow):
                                               height=500,
                                               window_name="Imported Point Cloud")
 
-
     def saveFile(self):
+
+        #makeSTL
+
+        self.STL = self.exporSTLs.makeSTL(10,0.5, 7, 8,self.processFotos.main_pcd)
+        o3d.visualization.draw_geometries([self.STL])
+
+        #saveSTL
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+
+        os.chdir("..")
+        os.chdir("..")
+        os.chdir("..")
+        self.file = QFileDialog.getSaveFileName(self, "Save STL", options=options)
+
+        print(str(ntpath.basename(self.file[0])))
+
+        print(ntpath.dirname(self.file[0]))
+
+        os.chdir(ntpath.dirname(self.file[0]))
+
+        o3d.io.write_triangle_mesh(str(ntpath.basename(self.file[0])) + ".stl", self.STL)
+
         """Speichern der Punktwolke/Mesh file (.stl)"""
 
     def quitApp(self):

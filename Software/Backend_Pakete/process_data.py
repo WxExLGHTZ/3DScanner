@@ -12,7 +12,9 @@ class ProcessData():
 
         # umgeschrieben
         self.bbox = o3d.geometry.AxisAlignedBoundingBox((-0.13, -0.13, 0), (0.13, 0.13, 0.2))
-        self.main_pcd = None
+
+       #self.main_pcd = None
+        self.main_pcd = o3d.geometry.PointCloud()
 
         self.dtr = np.pi / 180
         self.distance = 0.258 - 0.0
@@ -21,8 +23,8 @@ class ProcessData():
 
 
     #muss dann als erstes gemacht werden nach der Erstellung des process_data Objekts
-    def main_pcdCreation(self):
-        self.main_pcd = o3d.geometry.PointCloud()
+    #def main_pcdCreation(self):
+     #   self.main_pcd = o3d.geometry.PointCloud()
 
         
 

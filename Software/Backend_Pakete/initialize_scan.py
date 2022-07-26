@@ -5,6 +5,8 @@ import numpy as np #pip install numpy
 
 class InitializeScan():
 
+
+
     def __init__(self, width, height, framerate,autoexposureFrames):
 
         self.width = width
@@ -12,10 +14,14 @@ class InitializeScan():
         self.framerate = framerate
         self.autoexposureFrames = autoexposureFrames
         self.pipe = rs.pipeline()
+
         self.align = None
         self.config = rs.config()
+
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.any, self.framerate)
         self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.any, self.framerate)
+
+
 
         self.color_image = None
         self.depth_image = None
@@ -38,7 +44,9 @@ class InitializeScan():
     def startPipeline(self):
 
         self.pipe.start(self.config)
+
         self.align = rs.align(rs.stream.color)
+        print("test")
 
 
     def stopPipeline(self):
@@ -79,7 +87,9 @@ class InitializeScan():
 
 
 
-    def intrinsic(self):
+    def intrinsics(self):
+
+
 
         self.intrinsic = o3d.camera.PinholeCameraIntrinsic(self.w, self.h, self.fx, self.fy, self.px, self.py)
 

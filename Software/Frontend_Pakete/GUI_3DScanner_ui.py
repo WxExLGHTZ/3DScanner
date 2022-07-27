@@ -21,9 +21,6 @@ from Software.Backend_Pakete.arduino import *
 from Software.Backend_Pakete.initialize_scan import *
 from Software.Backend_Pakete.process_data import *
 
-# TODO - Statusbar in Setings
-# TODO - OpenCV Cam raus nehmen, GUI Kleiner, nut buttons, buttons breiter,gräßer
-# TODO -
 
 # ARDUINO - global variables
 ardPort = "COM5"
@@ -128,7 +125,7 @@ class SettingsWindow(PageWindow):
         self.widthFrameLabel.setGeometry(QtCore.QRect(10, 90, 150, 30))
 
         self.widthFrame = QtWidgets.QLineEdit(self)
-        self.widthFrame.setText(str(84))
+        self.widthFrame.setText(str(848))
         self.widthFrame.setObjectName("widthFrame")
         self.onlyInt = QIntValidator()
         self.widthFrame.setValidator(self.onlyInt)
@@ -149,12 +146,18 @@ class SettingsWindow(PageWindow):
         self.heightFrame.setGeometry(QtCore.QRect(170, 130, 30, 30))
         self.heightFrame.setFixedSize(inputWidth, inputHeight)
 
+
         self.verticalLayoutWidget = QtWidgets.QWidget(self)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(70, 300, 200, 100))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(70, 260, 200, 140))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
+
+        self.resetDefault = QtWidgets.QPushButton("Reset Default Settings", self)
+        self.resetDefault.setGeometry(QtCore.QRect(80, 240, 160, 400))
+        self.resetDefault.setFixedSize(200, 40)
+        self.resetDefault.clicked.connect(self.resetDefaultSettings)
 
         self.backButton = QtWidgets.QPushButton("Back to Main", self)
         self.backButton.setGeometry(QtCore.QRect(70, 360, 160, 400))
@@ -162,13 +165,18 @@ class SettingsWindow(PageWindow):
         self.backButton.setMaximumSize(QtCore.QSize(200, 40))
         self.backButton.clicked.connect(self.goBack)
 
-        self.saveButton = QtWidgets.QPushButton("Save", self)
-        self.saveButton.setGeometry(QtCore.QRect(70, 320, 160, 400))
+
+        self.saveButton = QtWidgets.QPushButton("Save Settings", self)
+        self.saveButton.setGeometry(QtCore.QRect(70, 280, 160, 400))
         self.saveButton.setMinimumSize(QtCore.QSize(200, 40))
         self.saveButton.setMaximumSize(QtCore.QSize(200, 40))
         self.saveButton.clicked.connect(self.SaveSettings)
 
+        spacerItem2 = QtWidgets.QSpacerItem(10, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+
+        self.verticalLayout.addWidget(self.resetDefault)
         self.verticalLayout.addWidget(self.saveButton)
+        self.verticalLayout.addItem(spacerItem2)
         self.verticalLayout.addWidget(self.backButton)
 
     def SaveSettings(self):
@@ -183,6 +191,20 @@ class SettingsWindow(PageWindow):
         widthFrame = int(wFrame)
         heightFrame = int(hFrame)
         print(ardPort, baudRate, widthFrame, heightFrame)
+
+    def resetDefaultSettings(self):
+        global ardPort, baudRate, widthFrame, heightFrame, stepSize
+
+        ardPort = "COM3"
+        baudRate = 9600
+        widthFrame = 848
+        heightFrame = 480
+        stepSize = 256
+        self.ArdPort.setText(ardPort)
+        self.baudRate.setText(str(baudRate))
+        self.widthFrame.setText(str(widthFrame))
+        self.heightFrame.setText(str(heightFrame))
+
 
 
 # endregion
@@ -208,6 +230,7 @@ class Ui_MainWindow(PageWindow):
         buttonWidth = 200
         buttonHeight = 40
         btnSize = QtCore.QSize(buttonWidth, buttonHeight)
+        btnSizeStart = QtCore.QSize(200, 60)
 
         self.statusBar = QtWidgets.QStatusBar(self.centralwidget)
         self.statusBar.setGeometry(QtCore.QRect(0, 400, 400, 20))
@@ -227,19 +250,19 @@ class Ui_MainWindow(PageWindow):
         self.helpButton.setObjectName("helpButton")
 
         self.startScanButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.startScanButton.setMinimumSize(btnSize)
-        self.startScanButton.setMaximumSize(btnSize)
+        self.startScanButton.setMinimumSize(btnSizeStart)
+        self.startScanButton.setMaximumSize(btnSizeStart)
         self.startScanButton.setObjectName("startScanButton")
         self.verticalLayout.addWidget(self.startScanButton)
 
-        self.stopScanButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.stopScanButton.setMinimumSize(btnSize)
-        self.stopScanButton.setMaximumSize(btnSize)
-        self.stopScanButton.setObjectName("stopScanButton")
-        self.verticalLayout.addWidget(self.stopScanButton)
-
         spacerItem = QtWidgets.QSpacerItem(30, 30, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout.addItem(spacerItem)
+
+        self.showPCButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.showPCButton.setMinimumSize(btnSize)
+        self.showPCButton.setMaximumSize(btnSize)
+        self.showPCButton.setObjectName("showPCButton")
+        self.verticalLayout.addWidget(self.showPCButton)
 
         self.importButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
         self.importButton.setMinimumSize(btnSize)
@@ -280,7 +303,7 @@ class Ui_MainWindow(PageWindow):
 
         # button connect
         self.startScanButton.clicked.connect(self.startScan)
-        self.stopScanButton.clicked.connect(self.stopScan)
+        self.showPCButton.clicked.connect(self.showPointCloud)
         self.importButton.clicked.connect(self.importFile)
         self.saveButton.clicked.connect(self.saveFile)
         self.settingsButton.clicked.connect(self.make_handleButton("settingsButton"))
@@ -291,6 +314,10 @@ class Ui_MainWindow(PageWindow):
         exitAction.setShortcut('Ctrl+Q')
         exitAction.triggered.connect(self.quitApp)
 
+        self.showPCButton.setEnabled(False)
+        self.importButton.setEnabled(False)
+        self.saveButton.setEnabled(False)
+
         self.retranslateUi(self)
         QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -298,7 +325,7 @@ class Ui_MainWindow(PageWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("3D-Scanner", "MainWindow"))
         self.startScanButton.setText(_translate("MainWindow", "Start Scan"))
-        self.stopScanButton.setText(_translate("MainWindow", "Stop Scan"))
+        self.showPCButton.setText(_translate("MainWindow", "Show Pointcloud"))
         self.importButton.setText(_translate("MainWindow", "Import"))
         self.saveButton.setText(_translate("MainWindow", "Save"))
         self.settingsButton.setText(_translate("MainWindow", "Settings"))
@@ -355,20 +382,17 @@ class Ui_MainWindow(PageWindow):
         except:
             print("error")
         finally:
-
+            self.showPCButton.setEnabled(True)
+            self.saveButton.setEnabled(True)
+            self.importButton.setEnabled(True)
             self.initScan.stopPipeline()
             self.arduino.close()
             print("ende process")
 
-    def stopScan(self):
-
-
+    def showPointCloud(self):
         o3d.visualization.draw_geometries([self.processFotos.getPointcloud()])
 
 
-
-
-        """Stoppt den Scan Prozess."""
 
     def importFile(self):
         """Startet QFileDialog. Eine .ply oder .stl Datei kann ausgewählt werden. """

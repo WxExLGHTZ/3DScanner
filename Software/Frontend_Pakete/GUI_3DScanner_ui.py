@@ -262,13 +262,14 @@ class Ui_MainWindow(PageWindow):
         self.showPCButton.setMinimumSize(btnSize)
         self.showPCButton.setMaximumSize(btnSize)
         self.showPCButton.setObjectName("showPCButton")
-        self.verticalLayout.addWidget(self.showPCButton)
+
 
         self.importButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
         self.importButton.setMinimumSize(btnSize)
         self.importButton.setMaximumSize(btnSize)
         self.importButton.setObjectName("importButton")
         self.verticalLayout.addWidget(self.importButton)
+        self.verticalLayout.addWidget(self.showPCButton)
 
         self.saveButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
         self.saveButton.setMinimumSize(btnSize)
@@ -315,7 +316,7 @@ class Ui_MainWindow(PageWindow):
         exitAction.triggered.connect(self.quitApp)
 
         self.showPCButton.setEnabled(False)
-        self.importButton.setEnabled(False)
+        #self.importButton.setEnabled(False)
         self.saveButton.setEnabled(False)
 
         self.retranslateUi(self)
@@ -384,7 +385,7 @@ class Ui_MainWindow(PageWindow):
         finally:
             self.showPCButton.setEnabled(True)
             self.saveButton.setEnabled(True)
-            self.importButton.setEnabled(True)
+            #self.importButton.setEnabled(True)
             self.initScan.stopPipeline()
             self.arduino.close()
             print("ende process")

@@ -20,7 +20,7 @@ from Software.Backend_Pakete.scan import *
 from Software.Backend_Pakete.arduino import *
 from Software.Backend_Pakete.initialize_scan import *
 from Software.Backend_Pakete.process_data import *
-
+from Software.Backend_Pakete.arduino_Portcheck import *
 
 # ARDUINO - global variables
 ardPort = "COM5"
@@ -101,7 +101,7 @@ class SettingsWindow(PageWindow):
         self.ArdPortLabel.setGeometry(QtCore.QRect(10, 10, 150, 30))
 
         self.ArdPort = QtWidgets.QLineEdit(self)
-        self.ArdPort.setText("COM3")
+        self.ArdPort.setText("COM5")
         self.ArdPort.setObjectName("portText")
         self.ArdPort.setAlignment(QtCore.Qt.AlignCenter)
         self.ArdPort.setGeometry(QtCore.QRect(170, 10, 30, 30))
@@ -350,45 +350,52 @@ class Ui_MainWindow(PageWindow):
         """Verbindet sich mit der Kamera und startet den Scan Prozess."""
         # Arduino init - Arduino braucht COMPort(string), baudRate(int),
 
-        global ardPort, baudRate, widthFrame, heightFrame, stepSize
-        self.arduino = Arduino(comPort=ardPort, baudRate=baudRate, timeout=0.1)
-        self.scan = Scan(width=widthFrame, height=heightFrame, framerate=30, autoexposureFrames=10)
+        ardcheck = check_arduino_connection()
+        camcheck = check_realsense_connection()
 
-        self.initScan = InitializeScan(self.scan.width, self.scan.height, self.scan.framerate,
+        if ardcheck == True and camcheck == True:
+
+            global ardPort, baudRate, widthFrame, heightFrame, stepSize
+            self.arduino = Arduino(comPort=ardPort, baudRate=baudRate, timeout=0.1)
+            self.scan = Scan(width=widthFrame, height=heightFrame, framerate=30, autoexposureFrames=10)
+
+            self.initScan = InitializeScan(self.scan.width, self.scan.height, self.scan.framerate,
                                        self.scan.autoexposureFrames)
 
 
 
 
-        self.initScan.startPipeline()
-        print("test")
-        try:
-            while True:
-                self.initScan.takeFoto()
-                angle = float(self.arduino.giveAngle())
-                self.colorInit = self.initScan.color_igm()
-                self.depthInit = self.initScan.depth_igm()
-                self.intrinInit = self.initScan.intrinsics()
+            self.initScan.startPipeline()
+            print("test")
+            try:
+                while True:
+                    self.initScan.takeFoto()
+                    angle = float(self.arduino.giveAngle())
+                    self.colorInit = self.initScan.color_igm()
+                    self.depthInit = self.initScan.depth_igm()
+                    self.intrinInit = self.initScan.intrinsics()
 
-                self.arduino.rotate(stepSize)
-                #self.processFotos = ProcessData().processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
+                    self.arduino.rotate(stepSize)
+                    #self.processFotos = ProcessData().processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
 
-                self.processFotos.processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
-                self.arduino.waitForRotation()
+                    self.processFotos.processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
+                    self.arduino.waitForRotation()
 
-                print("hat funktioniert")
-                if angle >= 360:
-                   break
+                    print("hat funktioniert")
+                    if angle >= 360:
+                        break
 
-        except:
-            print("error")
-        finally:
-            self.showPCButton.setEnabled(True)
-            self.saveButton.setEnabled(True)
-            #self.importButton.setEnabled(True)
-            self.initScan.stopPipeline()
-            self.arduino.close()
-            print("ende process")
+            except:
+                print("error")
+            finally:
+                self.showPCButton.setEnabled(True)
+                self.saveButton.setEnabled(True)
+                #self.importButton.setEnabled(True)
+                self.initScan.stopPipeline()
+                self.arduino.close()
+                print("ende process")
+        else:
+            print("check connections")
 
     def showPointCloud(self):
         o3d.visualization.draw_geometries([self.processFotos.getPointcloud()])

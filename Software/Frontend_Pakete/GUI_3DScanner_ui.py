@@ -24,7 +24,7 @@ from Software.Backend_Pakete.arduino_Portcheck import *
 ardPort = "COM5"
 baudRate = 9600
 # SCAN - global variables
-widthFrame = 848
+widthFrame =   848
 heightFrame = 480
 stepSize = 256
 # MESH Parameters- global variables
@@ -194,9 +194,9 @@ class SettingsWindow(PageWindow):
         self.camLayout.addRow("Frame Height:", self.heightFrame)
         self.camLayout.addRow("Step Size:", self.stepSize)
         self.camLayout.addRow("K Points:", self.kp)
-        self.camLayout.addRow("std ratio:", self.stdRatio)
-        self.camLayout.addRow("depth:", self.depthL)
-        self.camLayout.addRow("iterations:", self.iter)
+        self.camLayout.addRow("Ratio:", self.stdRatio)
+        self.camLayout.addRow("Depth:", self.depthL)
+        self.camLayout.addRow("Iterations:", self.iter)
 
         ### RECHTE SEITE
         # verticalLayout
@@ -424,23 +424,22 @@ class Ui_MainWindow(PageWindow):
             self.initScan = InitializeScan(self.scan.width, self.scan.height, self.scan.framerate,
                                            self.scan.autoexposureFrames)
 
-            self.initScan.startPipeline()
-            print("test")
+            self.initScan.pipelineStarten()
+
             try:
                 while True:
-                    self.initScan.takeFoto()
-                    angle = float(self.arduino.giveAngle())
-                    self.colorInit = self.initScan.color_igm()
-                    self.depthInit = self.initScan.depth_igm()
+                    self.initScan.aufnahme()
+                    angle = float(self.arduino.winkel())
+                    self.colorInit = self.initScan.color_img()
+                    self.depthInit = self.initScan.depth_img()
                     self.intrinInit = self.initScan.intrinsics()
 
-                    self.arduino.rotate(stepSize)
+                    self.arduino.rotieren(stepSize)
                     # self.processFotos = ProcessData().processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
 
-                    self.processFotos.processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
-                    self.arduino.waitForRotation()
+                    self.processFotos.konvertieren(angle, self.depthInit, self.colorInit, self.intrinInit)
+                    self.arduino.warteAufRotation()
 
-                    print("hat funktioniert")
                     if angle >= 360:
                         break
 
@@ -450,11 +449,11 @@ class Ui_MainWindow(PageWindow):
                 self.showPCButton.setEnabled(True)
                 self.saveButton.setEnabled(True)
                 # self.importButton.setEnabled(True)
-                self.initScan.stopPipeline()
+                self.initScan.pipelineStoppen()
                 self.arduino.close()
                 print("ende process")
         else:
-            print("check connections")
+            print("error, please check connections")
 
     def showPointCloud(self):
         o3d.visualization.draw_geometries([self.processFotos.getPointcloud()])
@@ -485,14 +484,14 @@ class Ui_MainWindow(PageWindow):
                                               width=500,
                                               height=500,
                                               window_name="Imported Point Cloud")
-            self.processFotos.main_pcd = pcd
-            print(self.processFotos.main_pcd)
+            self.processFotos.hauptPointCloud = pcd
+            print(self.processFotos.hauptPointCloud)
 
     def saveFile(self):
 
         # makeSTL
-        print(self.processFotos.main_pcd)
-        self.STL = self.exporSTLs.makeSTL(10, 0.5, 7, 8, self.processFotos.main_pcd)
+        print(self.processFotos.hauptPointCloud)
+        self.STL = self.exporSTLs.stlErstellen(10, 0.5, 7, 8, self.processFotos.hauptPointCloud)
         o3d.visualization.draw_geometries([self.STL])
 
         # saveSTL

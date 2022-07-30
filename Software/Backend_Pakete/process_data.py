@@ -5,37 +5,22 @@ import numpy as np #pip install numpy
 
 class ProcessData():
    
-   
 
 
     def __init__(self):
 
-        # umgeschrieben
-        self.bbox = o3d.geometry.AxisAlignedBoundingBox((-0.13, -0.13, 0), (0.13, 0.13, 0.2))
+        self.boundingBox = o3d.geometry.AxisAlignedBoundingBox((-0.13, -0.13, 0), (0.13, 0.13, 0.2))
 
-       #self.main_pcd = None
-        self.main_pcd = o3d.geometry.PointCloud()
+        self.hauptPointCloud = o3d.geometry.PointCloud()
 
         self.dtr = np.pi / 180
-        self.distance = 0.258 - 0.0
-        #self.distance = 0.258 - self.backDistance
+        self.distance = 0.258
 
+    def konvertieren(self, angle, depth_image, color_image, intrinsic):
 
-
-    #muss dann als erstes gemacht werden nach der Erstellung des process_data Objekts
-    #def main_pcdCreation(self):
-     #   self.main_pcd = o3d.geometry.PointCloud()
-
-        
-
-
-    def processFoto(self, angle,depth_image,color_image,intrinsic):
         print(angle)
 
-        self.angle = angle
-
-        #self.depth_frame_open3d = o3d.geometry.Image(self.depth_image)
-        #self.color_frame_open3d = o3d.geometry.Image(self.color_image)
+        self.winkel = angle
 
         self.depth_frame_open3d = o3d.geometry.Image(depth_image)
         self.color_frame_open3d = o3d.geometry.Image(color_image)
@@ -44,35 +29,34 @@ class ProcessData():
                                                                              self.depth_frame_open3d,
                                                                              convert_rgb_to_intensity=False)
 
-        #self.pcd = o3d.geometry.PointCloud.create_from_rgbd_image(self.rgbd_image, self.intrinsic)
 
-        self.pcd = o3d.geometry.PointCloud.create_from_rgbd_image(self.rgbd_image, intrinsic)
+        self.pointCloud = o3d.geometry.PointCloud.create_from_rgbd_image(self.rgbd_image, intrinsic)
 
 
-        self.pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
-        self.pcd.orient_normals_towards_camera_location(camera_location=np.array([0., 0., 0.]))
-        self.getcameraLocation()
-        self.rMatrix()
-        self.pcd.rotate(self.R, (0, 0, 0))
-        self.pcd.translate((self.x, self.y, self.z))
-        self.pcd = self.pcd.crop(self.bbox)
-        self.pcd, self.ind = self.pcd.remove_statistical_outlier(nb_neighbors=100, std_ratio=2)
-        self.main_pcd = self.main_pcd + self.pcd
+        self.pointCloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
+        self.pointCloud.orient_normals_towards_camera_location(camera_location=np.array([0., 0., 0.]))
+        self.getKameraPos()
+        self.rtMatrix()
+        self.pointCloud.rotate(self.R, (0, 0, 0))
+        self.pointCloud.translate((self.x, self.y, self.z))
+        self.pointCloud = self.pointCloud.crop(self.boundingBox)
+        self.pointCloud, self.ind = self.pointCloud.remove_statistical_outlier(nb_neighbors=100, std_ratio=2)
+        self.hauptPointCloud = self.hauptPointCloud + self.pointCloud
 
     def getPointcloud(self):
-        return self.main_pcd
+        return self.hauptPointCloud
 
 
 
-    def getcameraLocation(self):
-        self.x = np.sin(self.angle * self.dtr) * self.distance - np.cos(self.angle * self.dtr) * 0.035
-        self.y = -np.cos(self.angle * self.dtr) * self.distance - np.sin(self.angle * self.dtr) * 0.035
+    def getKameraPos(self):
+        self.x = np.sin(self.winkel * self.dtr) * self.distance - np.cos(self.winkel * self.dtr) * 0.035
+        self.y = -np.cos(self.winkel * self.dtr) * self.distance - np.sin(self.winkel * self.dtr) * 0.035
         self.z = 0.165
-        self.o = self.angle
+        self.o = self.winkel
         self.a = 112.5
         self.t = 0
 
-    def rMatrix(self):
+    def rtMatrix(self):
         self.o = self.o * self.dtr
         self.a = (-self.a) * self.dtr
         self.t = self.t * self.dtr

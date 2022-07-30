@@ -13,15 +13,13 @@ class InitializeScan():
         self.height = height
         self.framerate = framerate
         self.autoexposureFrames = autoexposureFrames
-        self.pipe = rs.pipeline()
+        self.thePipeline = rs.pipeline()
 
         self.align = None
-        self.config = rs.config()
+        self.theConfig = rs.config()
 
-        self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.any, self.framerate)
-        self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.any, self.framerate)
-
-
+        self.theConfig.enable_stream(rs.stream.color, self.width, self.height, rs.format.any, self.framerate)
+        self.theConfig.enable_stream(rs.stream.depth, self.width, self.height, rs.format.any, self.framerate)
 
         self.color_image = None
         self.depth_image = None
@@ -36,60 +34,44 @@ class InitializeScan():
         self.px = None
         self.py = None
 
-        #wird benutzt in process_data.py
-        #self.depth_image
-        #self.color_image
+    def pipelineStarten(self):
 
-
-    def startPipeline(self):
-
-        self.pipe.start(self.config)
-
+        self.thePipeline.start(self.theConfig)
         self.align = rs.align(rs.stream.color)
-        print("test")
+
+        print("Pipeline gestartet")
 
 
-    def stopPipeline(self):
+    def pipelineStoppen(self):
 
-        self.pipe.stop()
-        self.pipe = None
-        self.config = None
+        self.thePipeline.stop()
+        self.thePipeline = None
+        self.theConfig = None
 
-        print("pipeline gestopt")
-
-
-
-    def takeFoto(self):
+        print("Pipeline gestopt")
 
 
-        print("foto gemaakt!")
+
+    def aufnahme(self):
+
+
+        print("Foto aufgenommen")
         for i in range(self.autoexposureFrames):
-            self.frameset = self.pipe.wait_for_frames()
+            self.cadrageSet = self.thePipeline.wait_for_frames()
 
 
-        self.frameset = self.pipe.wait_for_frames()
-        self.frameset = self.align.process(self.frameset)
-        self.profile = self.frameset.get_profile()
-        self.depth_intrinsics = self.profile.as_video_stream_profile().get_intrinsics()
-        self.w, self.h = self.depth_intrinsics.width, self.depth_intrinsics.height
-        self.fx, self.fy = self.depth_intrinsics.fx, self.depth_intrinsics.fy
-        self.px, self.py = self.depth_intrinsics.ppx, self.depth_intrinsics.ppy
+        self.cadrageSet = self.thePipeline.wait_for_frames()
+        self.cadrageSet = self.align.process(self.cadrageSet)
+        self.profile = self.cadrageSet.get_profile()
+        self.intrinsicsDepth = self.profile.as_video_stream_profile().get_intrinsics()
+        self.w, self.h = self.intrinsicsDepth.width, self.intrinsicsDepth.height
+        self.fx, self.fy = self.intrinsicsDepth.fx, self.intrinsicsDepth.fy
+        self.px, self.py = self.intrinsicsDepth.ppx, self.intrinsicsDepth.ppy
 
-        self.color_frame = self.frameset.get_color_frame()
-        self.depth_frame = self.frameset.get_depth_frame()
-
-        #werden jetzt als rückgabewerte von Funktionen übergeben
-
-        #self.intrinsic = o3d.camera.PinholeCameraIntrinsic(self.w, self.h, self.fx, self.fy, self.px, self.py)
-        #self.depth_image = np.asanyarray(self.depth_frame.get_data())
-        #self.color_image = np.asanyarray(self.color_frame.get_data())
-
-
-
+        self.color_frame = self.cadrageSet.get_color_frame()
+        self.depth_frame = self.cadrageSet.get_depth_frame()
 
     def intrinsics(self):
-
-
 
         self.intrinsic = o3d.camera.PinholeCameraIntrinsic(self.w, self.h, self.fx, self.fy, self.px, self.py)
 
@@ -97,18 +79,18 @@ class InitializeScan():
 
 
 
-    def depth_igm(self):
+    def depth_img(self):
         self.depth_image = np.asanyarray(self.depth_frame.get_data())
 
         return self.depth_image
 
 
 
-    def color_igm(self):
+    def color_img(self):
         self.color_image = np.asanyarray(self.color_frame.get_data())
 
         return self.color_image
 
 
-    def giveImageArray(self):
+    def bildArray(self):
         return self.color_image

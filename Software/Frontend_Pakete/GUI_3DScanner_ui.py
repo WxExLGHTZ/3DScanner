@@ -11,8 +11,6 @@ import os
 import shutil
 import ntpath
 
-
-
 from Software.Backend_Pakete.export_scan import *
 from Software.Backend_Pakete.scan import *
 # from Software.Backend_Pakete.arduino_Portcheck import *
@@ -29,7 +27,11 @@ baudRate = 9600
 widthFrame = 848
 heightFrame = 480
 stepSize = 256
-
+# MESH Parameters- global variables
+kPoints = 20
+stdRatio = 0.5
+depth = 7
+iterations = 8
 
 # region PageWindows, HelpWindow, SettingWindow
 class PageWindow(QMainWindow):
@@ -77,8 +79,8 @@ class SettingsWindow(PageWindow):
 
     def initUi(self):
         self.setWindowTitle("Settings")
-        width = 350
-        height = 420
+        width = 800
+        height = 450
         self.resize(width, height)
         self.setMaximumSize(QtCore.QSize(width, height))
         self.setMinimumSize(QtCore.QSize(width, height))
@@ -89,66 +91,117 @@ class SettingsWindow(PageWindow):
         self.goto("main")
 
     def UiComponents(self):
-        inputWidth = 170
+        inputWidth = 150
         inputHeight = 30
+        self.onlyInt = QIntValidator()  # Allows only integer inside QText
 
         self.statusBar = QtWidgets.QStatusBar(self)
-        self.statusBar.setGeometry(QtCore.QRect(0, 400, 400, 20))
+        self.statusBar.setGeometry(QtCore.QRect(0, 430, 800, 20))
         self.statusBar.showMessage("Statusbar test")
 
-        self.ArdPortLabel = QtWidgets.QLabel(self)
-        self.ArdPortLabel.setText("COM Port Arduino:")
-        self.ArdPortLabel.setGeometry(QtCore.QRect(10, 10, 150, 30))
+        self.headerLabelArduino = QtWidgets.QLabel(self)
+        self.headerLabelArduino.setText("Arduino Settings")
+        self.headerLabelArduino.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.headerLabelCam = QtWidgets.QLabel(self)
+        self.headerLabelCam.setText("Camera Settings")
+        self.headerLabelCam.setAlignment(QtCore.Qt.AlignCenter)
 
         self.ArdPort = QtWidgets.QLineEdit(self)
         self.ArdPort.setText("COM5")
         self.ArdPort.setObjectName("portText")
         self.ArdPort.setAlignment(QtCore.Qt.AlignCenter)
-        self.ArdPort.setGeometry(QtCore.QRect(170, 10, 30, 30))
-        self.ArdPort.setFixedSize(inputWidth, inputHeight)
-
-        self.baudRateLabel = QtWidgets.QLabel(self)
-        self.baudRateLabel.setText("Baudrate Arduino:")
-        self.baudRateLabel.setGeometry(QtCore.QRect(10, 50, 150, 30))
+        # self.ArdPort.setFixedSize(inputWidth, inputHeight)
 
         self.baudRate = QtWidgets.QLineEdit(self)
         self.baudRate.setText(str(9600))
         self.baudRate.setObjectName("baudrate")
-        self.onlyInt = QIntValidator()
         self.baudRate.setValidator(self.onlyInt)
         self.baudRate.setAlignment(QtCore.Qt.AlignCenter)
-        self.baudRate.setGeometry(QtCore.QRect(170, 50, 30, 30))
-        self.baudRate.setFixedSize(inputWidth, inputHeight)
-
-        self.widthFrameLabel = QtWidgets.QLabel(self)
-        self.widthFrameLabel.setText("Frame width:")
-        self.widthFrameLabel.setGeometry(QtCore.QRect(10, 90, 150, 30))
+        # self.baudRate.setFixedSize(inputWidth, inputHeight)
 
         self.widthFrame = QtWidgets.QLineEdit(self)
         self.widthFrame.setText(str(848))
         self.widthFrame.setObjectName("widthFrame")
-        self.onlyInt = QIntValidator()
         self.widthFrame.setValidator(self.onlyInt)
         self.widthFrame.setAlignment(QtCore.Qt.AlignCenter)
-        self.widthFrame.setGeometry(QtCore.QRect(170, 90, 30, 30))
-        self.widthFrame.setFixedSize(inputWidth, inputHeight)
-
-        self.heightFrameLabel = QtWidgets.QLabel(self)
-        self.heightFrameLabel.setText("Frame height:")
-        self.heightFrameLabel.setGeometry(QtCore.QRect(10, 130, 150, 30))
+        # self.widthFrame.setFixedSize(inputWidth, inputHeight)
 
         self.heightFrame = QtWidgets.QLineEdit(self)
         self.heightFrame.setText(str(480))
         self.heightFrame.setObjectName("heightFrame")
-        self.onlyInt = QIntValidator()
         self.heightFrame.setValidator(self.onlyInt)
         self.heightFrame.setAlignment(QtCore.Qt.AlignCenter)
-        self.heightFrame.setGeometry(QtCore.QRect(170, 130, 30, 30))
-        self.heightFrame.setFixedSize(inputWidth, inputHeight)
+        # self.heightFrame.setFixedSize(inputWidth, inputHeight)
 
+        self.stepSize = QtWidgets.QLineEdit(self)
+        self.stepSize.setText(str(256))
+        self.stepSize.setObjectName("stepSize")
+        self.stepSize.setValidator(self.onlyInt)
+        self.stepSize.setAlignment(QtCore.Qt.AlignCenter)
+        # self.heightFrame.setFixedSize(inputWidth, inputHeight)
 
+        self.kp = QtWidgets.QLineEdit(self)
+        self.kp.setText(str(10))
+        self.kp.setObjectName("kPoints")
+        self.kp.setValidator(self.onlyInt)
+        self.kp.setAlignment(QtCore.Qt.AlignCenter)
+        # self.heightFrame.setFixedSize(inputWidth, inputHeight)
+
+        self.stdRatio = QtWidgets.QLineEdit(self)
+        self.stdRatio.setText(str(0.5))
+        self.stdRatio.setObjectName("stdRatio")
+        self.stdRatio.setValidator(self.onlyInt)
+        self.stdRatio.setAlignment(QtCore.Qt.AlignCenter)
+        # self.heightFrame.setFixedSize(inputWidth, inputHeight)
+
+        self.depthL = QtWidgets.QLineEdit(self)
+        self.depthL.setText(str(7))
+        self.depthL.setObjectName("depth")
+        self.depthL.setValidator(self.onlyInt)
+        self.depthL.setAlignment(QtCore.Qt.AlignCenter)
+        # self.heightFrame.setFixedSize(inputWidth, inputHeight)
+
+        self.iter = QtWidgets.QLineEdit(self)
+        self.iter.setText(str(8))
+        self.iter.setObjectName("iterations")
+        self.iter.setValidator(self.onlyInt)
+        self.iter.setAlignment(QtCore.Qt.AlignCenter)
+        # self.heightFrame.setFixedSize(inputWidth, inputHeight)
+
+        #### Form LINKSOBEN
+        self.formWidget = QtWidgets.QWidget(self)
+        self.formWidget.setGeometry(QtCore.QRect(0, 0, 320, 200))
+        self.formWidget.setObjectName("formWidget")
+
+        self.mainFormLayout = QFormLayout(self.formWidget)
+        self.mainFormLayout.setObjectName("Form Layout")
+        self.mainFormLayout.addWidget(self.headerLabelArduino)
+
+        self.mainFormLayout.addRow("COM Port Arduino:", self.ArdPort)
+        self.mainFormLayout.addRow("Baudrate Arduino:", self.baudRate)
+
+        #### Form LINKSUNTEN - CAM SETTINGS
+        self.camFormWidget = QtWidgets.QWidget(self)
+        self.camFormWidget.setGeometry(QtCore.QRect(265, 0, 320, 320))
+        self.camFormWidget.setObjectName("CamFormWidget")
+
+        self.camLayout = QFormLayout(self.camFormWidget)
+        self.camLayout.setObjectName("Cam Layout")
+        self.camLayout.addWidget(self.headerLabelCam)
+
+        self.camLayout.addRow("Frame width: ", self.widthFrame)
+        self.camLayout.addRow("Frame Height:", self.heightFrame)
+        self.camLayout.addRow("Step Size:", self.stepSize)
+        self.camLayout.addRow("K Points:", self.kp)
+        self.camLayout.addRow("std ratio:", self.stdRatio)
+        self.camLayout.addRow("depth:", self.depthL)
+        self.camLayout.addRow("iterations:", self.iter)
+
+        ### RECHTE SEITE
+        # verticalLayout
         self.verticalLayoutWidget = QtWidgets.QWidget(self)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(70, 260, 200, 140))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(570, 20, 200, 430))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -165,14 +218,13 @@ class SettingsWindow(PageWindow):
         self.backButton.setMaximumSize(QtCore.QSize(200, 40))
         self.backButton.clicked.connect(self.goBack)
 
-
         self.saveButton = QtWidgets.QPushButton("Save Settings", self)
         self.saveButton.setGeometry(QtCore.QRect(70, 280, 160, 400))
         self.saveButton.setMinimumSize(QtCore.QSize(200, 40))
         self.saveButton.setMaximumSize(QtCore.QSize(200, 40))
         self.saveButton.clicked.connect(self.SaveSettings)
 
-        spacerItem2 = QtWidgets.QSpacerItem(10, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        spacerItem2 = QtWidgets.QSpacerItem(200, 180, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
 
         self.verticalLayout.addWidget(self.resetDefault)
         self.verticalLayout.addWidget(self.saveButton)
@@ -180,31 +232,42 @@ class SettingsWindow(PageWindow):
         self.verticalLayout.addWidget(self.backButton)
 
     def SaveSettings(self):
-        global ardPort, baudRate, widthFrame, heightFrame
-        port = self.ArdPort.text()
-        baudRateGUI = self.baudRate.text()
-        wFrame = self.widthFrame.text()
-        hFrame = self.heightFrame.text()
+        global ardPort, baudRate, widthFrame, heightFrame, stepSize
+        global kPoints, stdRatio, depth, iterations
 
-        ardPort = port
-        baudRate = int(baudRateGUI)
-        widthFrame = int(wFrame)
-        heightFrame = int(hFrame)
-        print(ardPort, baudRate, widthFrame, heightFrame)
+        ardPort = self.ArdPort.text()
+        baudRate = int(self.baudRate.text())
+        widthFrame = int(self.widthFrame.text())
+        heightFrame = int(self.heightFrame.text())
+        stepSize = int(self.stepSize.text())
+        kPoints = int(self.kp.text())
+        stdRatio = float(self.stdRatio.text())
+        depth = int(self.depthL.text())
+        iterations = int(self.iter.text())
+        print(ardPort, baudRate, widthFrame, heightFrame, stepSize, kPoints, stdRatio, depth, iterations)
 
     def resetDefaultSettings(self):
         global ardPort, baudRate, widthFrame, heightFrame, stepSize
+        global kPoints, stdRatio, depth, iterations
 
         ardPort = "COM3"
         baudRate = 9600
         widthFrame = 848
         heightFrame = 480
         stepSize = 256
+        kPoints = 10
+        stdRatio = 0.5
+        depth = 7
+        iterations = 8
         self.ArdPort.setText(ardPort)
         self.baudRate.setText(str(baudRate))
         self.widthFrame.setText(str(widthFrame))
         self.heightFrame.setText(str(heightFrame))
-
+        self.kp.setText(str(kPoints))
+        self.stepSize.setText(str(stepSize))
+        self.stdRatio.setText(str(stdRatio))
+        self.depthL.setText(str(depth))
+        self.iter.setText(str(iterations))
 
 
 # endregion
@@ -233,11 +296,11 @@ class Ui_MainWindow(PageWindow):
         btnSizeStart = QtCore.QSize(200, 60)
 
         self.statusBar = QtWidgets.QStatusBar(self.centralwidget)
-        self.statusBar.setGeometry(QtCore.QRect(0, 400, 400, 20))
+        self.statusBar.setGeometry(QtCore.QRect(0, 450, 800, 20))
         self.statusBar.showMessage("Statusbar test")
 
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(70, 20, 200, 450))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(570, 20, 200, 470))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -262,7 +325,6 @@ class Ui_MainWindow(PageWindow):
         self.showPCButton.setMinimumSize(btnSize)
         self.showPCButton.setMaximumSize(btnSize)
         self.showPCButton.setObjectName("showPCButton")
-
 
         self.importButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
         self.importButton.setMinimumSize(btnSize)
@@ -316,7 +378,7 @@ class Ui_MainWindow(PageWindow):
         exitAction.triggered.connect(self.quitApp)
 
         self.showPCButton.setEnabled(False)
-        #self.importButton.setEnabled(False)
+        # self.importButton.setEnabled(False)
         self.saveButton.setEnabled(False)
 
         self.retranslateUi(self)
@@ -360,10 +422,7 @@ class Ui_MainWindow(PageWindow):
             self.scan = Scan(width=widthFrame, height=heightFrame, framerate=30, autoexposureFrames=10)
 
             self.initScan = InitializeScan(self.scan.width, self.scan.height, self.scan.framerate,
-                                       self.scan.autoexposureFrames)
-
-
-
+                                           self.scan.autoexposureFrames)
 
             self.initScan.startPipeline()
             print("test")
@@ -376,7 +435,7 @@ class Ui_MainWindow(PageWindow):
                     self.intrinInit = self.initScan.intrinsics()
 
                     self.arduino.rotate(stepSize)
-                    #self.processFotos = ProcessData().processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
+                    # self.processFotos = ProcessData().processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
 
                     self.processFotos.processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
                     self.arduino.waitForRotation()
@@ -390,7 +449,7 @@ class Ui_MainWindow(PageWindow):
             finally:
                 self.showPCButton.setEnabled(True)
                 self.saveButton.setEnabled(True)
-                #self.importButton.setEnabled(True)
+                # self.importButton.setEnabled(True)
                 self.initScan.stopPipeline()
                 self.arduino.close()
                 print("ende process")
@@ -400,33 +459,43 @@ class Ui_MainWindow(PageWindow):
     def showPointCloud(self):
         o3d.visualization.draw_geometries([self.processFotos.getPointcloud()])
 
-
-
     def importFile(self):
         """Startet QFileDialog. Eine .ply oder .stl Datei kann ausgewählt werden. """
-        fileDialog, _ = QFileDialog.getOpenFileName(self, "Punktwolke Datei öffnen", "",
-                                                    "PC Format (*.ply)")
+        fDialog = QFileDialog(self)
+        fDialog.setFileMode(QFileDialog.Directory)
+        fDialog.setNameFilter("PC Format (*.pcd)")
+
+        fileDialog, _ = fDialog.getOpenFileName(self, "Punktwolke Datei öffnen", "",
+                                                "PC Format (*.pcd)")
+        print(fileDialog)
+        o3d.visualization.draw_geometries(fileDialog)
         file_path, file_ext = os.path.splitext(fileDialog)
 
         if file_ext == ".ply":
-            dataPath = "./Frontend_Pakete/data/importedPLYFile.ply"
+            dataPath = "./Frontend_Pakete/data/importedPLYFile.pcd"
             shutil.copy(fileDialog, dataPath)
 
-            PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.ply"
+            PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.pcd"
             pcd = o3d.io.read_point_cloud(PLYFile)
+
+            if o3d.io.read_point_cloud(PLYFile):
+                self.saveButton.setEnabled(True)
+
             o3d.visualization.draw_geometries([pcd],
                                               width=500,
                                               height=500,
                                               window_name="Imported Point Cloud")
+            self.processFotos.main_pcd = pcd
+            print(self.processFotos.main_pcd)
 
     def saveFile(self):
 
-        #makeSTL
-
-        self.STL = self.exporSTLs.makeSTL(10,0.5, 7, 8,self.processFotos.main_pcd)
+        # makeSTL
+        print(self.processFotos.main_pcd)
+        self.STL = self.exporSTLs.makeSTL(10, 0.5, 7, 8, self.processFotos.main_pcd)
         o3d.visualization.draw_geometries([self.STL])
 
-        #saveSTL
+        # saveSTL
 
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -462,8 +531,8 @@ class Ui_MainWindow(PageWindow):
 class Window(QMainWindow):
     def __init__(self):
         super().__init__(parent=None)
-        width = 350
-        height = 420
+        width = 800
+        height = 470
 
         self.setWindowTitle("3D Scanner")
         self.setObjectName("MainWindow")

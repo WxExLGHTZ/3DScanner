@@ -295,20 +295,17 @@ class Ui_MainWindow(PageWindow):
         btnSize = QtCore.QSize(buttonWidth, buttonHeight)
         btnSizeStart = QtCore.QSize(200, 60)
 
-        #self.pixmap = QPixmap("/Users/vinh/aauni/Fachuebergreifendesprojekt/hauptprogramm/03-3dscanner/Software/Frontend_Pakete/data/test.jpg")
+        #self.pixmap = QPixmap("data/test.jpg")
 
-        self.setMouseTracking(True)
+        #self.setMouseTracking(True)
 
 
-        self.picLabel = QLabel(self.centralwidget)
 
-        self.picLabel.setStyleSheet("background-color: black")
-        self.picLabel.setGeometry(20, 20, 520, 400)
-        self.picLabel.setPixmap(self.pixmap)
+
 
         self.statusBar = QtWidgets.QStatusBar(self.centralwidget)
         self.statusBar.setGeometry(QtCore.QRect(0, 450, 800, 20))
-        self.statusBar.showMessage("Statusbar test")
+
 
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(570, 20, 200, 470))
@@ -423,6 +420,11 @@ class Ui_MainWindow(PageWindow):
 
         return handleButton
 
+
+
+
+
+
     def startScan(self):
         """Verbindet sich mit der Kamera und startet den Scan Prozess."""
         # Arduino init - Arduino braucht COMPort(string), baudRate(int),
@@ -447,8 +449,8 @@ class Ui_MainWindow(PageWindow):
                     angle = float(self.arduino.winkel())
                     self.colorInit = self.initScan.color_img() # bild
 
-                    self.pixmap = self.colorInit
-                    self.picLabel.setPixmap(self.pixmap)
+                   # self.pixmap = self.colorInit
+                    #self.picLabel.setPixmap(self.pixmap)
                     self.depthInit = self.initScan.depth_img()
                     self.intrinInit = self.initScan.intrinsics()
 
@@ -458,7 +460,7 @@ class Ui_MainWindow(PageWindow):
                     self.processFotos.konvertieren(angle, self.depthInit, self.colorInit, self.intrinInit)
                     self.arduino.warteAufRotation()
 
-                    if angle >= 360:
+                    if angle >= 10:
                         break
 
             except:
@@ -466,13 +468,22 @@ class Ui_MainWindow(PageWindow):
             finally:
                 self.showPCButton.setEnabled(True)
                 self.saveButton.setEnabled(True)
+
+                #qimage = ImageQt(self.colorInit).copy()
+                #pixmap = QPixmap.fromImage(qimage)
+                #self.picLabel.setPixmap(pixmap)
                 # self.importButton.setEnabled(True)
+
                 self.initScan.pipelineStoppen()
                 self.arduino.close()
                 self.statusBar.showMessage("Scan beendet.")
+
                 print("ende process")
         else:
             print("error, please check connections")
+
+
+
 
     def showPointCloud(self):
         o3d.visualization.draw_geometries([self.processFotos.getPointcloud()])

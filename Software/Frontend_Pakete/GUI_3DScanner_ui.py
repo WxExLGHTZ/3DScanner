@@ -2,7 +2,7 @@
 import PyQt5.QtWidgets
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QTimer, QPoint
+from PyQt5.QtCore import QTimer, QPoint, pyqtSlot, pyqtSignal, QEvent, QObject
 from PyQt5.QtWidgets import QWidget, QAction, QHBoxLayout, QFileDialog
 from PyQt5.QtGui import QIntValidator, QFont, QPixmap
 import open3d as o3d
@@ -297,10 +297,14 @@ class Ui_MainWindow(PageWindow):
 
         #self.pixmap = QPixmap("/Users/vinh/aauni/Fachuebergreifendesprojekt/hauptprogramm/03-3dscanner/Software/Frontend_Pakete/data/test.jpg")
 
+        self.setMouseTracking(True)
+
+
         self.picLabel = QLabel(self.centralwidget)
 
         self.picLabel.setStyleSheet("background-color: black")
         self.picLabel.setGeometry(20, 20, 520, 400)
+        self.picLabel.setPixmap(self.pixmap)
 
         self.statusBar = QtWidgets.QStatusBar(self.centralwidget)
         self.statusBar.setGeometry(QtCore.QRect(0, 450, 800, 20))
@@ -402,6 +406,10 @@ class Ui_MainWindow(PageWindow):
         self.quitButton.setText(_translate("MainWindow", "Quit"))
         self.helpButton.setText(_translate("MainWindow", "Help"))
 
+    @pyqtSlot(QPoint)
+    def on_position_changed(self, p):
+        print(p)
+
     # region Button Funktionalitäten
 
     def helpMainWindow(self):
@@ -418,7 +426,7 @@ class Ui_MainWindow(PageWindow):
     def startScan(self):
         """Verbindet sich mit der Kamera und startet den Scan Prozess."""
         # Arduino init - Arduino braucht COMPort(string), baudRate(int),
-
+        self.statusBar.showMessage("Starte Scan..")
         ardcheck = check_arduino_connection()
         camcheck = check_realsense_connection()
 
@@ -446,7 +454,7 @@ class Ui_MainWindow(PageWindow):
 
                     self.arduino.rotieren(stepSize)
                     # self.processFotos = ProcessData().processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
-
+                    self.statusBar.showMessage("Scan Prozess bei: " + str(angle))
                     self.processFotos.konvertieren(angle, self.depthInit, self.colorInit, self.intrinInit)
                     self.arduino.warteAufRotation()
 
@@ -461,6 +469,7 @@ class Ui_MainWindow(PageWindow):
                 # self.importButton.setEnabled(True)
                 self.initScan.pipelineStoppen()
                 self.arduino.close()
+                self.statusBar.showMessage("Scan beendet.")
                 print("ende process")
         else:
             print("error, please check connections")

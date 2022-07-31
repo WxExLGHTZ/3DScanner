@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QTimer, QPoint
 from PyQt5.QtWidgets import QWidget, QAction, QHBoxLayout, QFileDialog
-from PyQt5.QtGui import QIntValidator, QFont
+from PyQt5.QtGui import QIntValidator, QFont, QPixmap
 import open3d as o3d
 import sys
 import os
@@ -95,9 +95,9 @@ class SettingsWindow(PageWindow):
         inputHeight = 30
         self.onlyInt = QIntValidator()  # Allows only integer inside QText
 
-        self.statusBar = QtWidgets.QStatusBar(self)
-        self.statusBar.setGeometry(QtCore.QRect(0, 430, 800, 20))
-        self.statusBar.showMessage("Statusbar test")
+        # self.statusBar = QtWidgets.QStatusBar(self)
+        # self.statusBar.setGeometry(QtCore.QRect(0, 430, 800, 20))
+        # self.statusBar.showMessage("Statusbar test")
 
         self.headerLabelArduino = QtWidgets.QLabel(self)
         self.headerLabelArduino.setText("Arduino Settings")
@@ -171,7 +171,7 @@ class SettingsWindow(PageWindow):
 
         #### Form LINKSOBEN
         self.formWidget = QtWidgets.QWidget(self)
-        self.formWidget.setGeometry(QtCore.QRect(0, 0, 320, 200))
+        self.formWidget.setGeometry(QtCore.QRect(0, 0, 250, 350))
         self.formWidget.setObjectName("formWidget")
 
         self.mainFormLayout = QFormLayout(self.formWidget)
@@ -183,7 +183,7 @@ class SettingsWindow(PageWindow):
 
         #### Form LINKSUNTEN - CAM SETTINGS
         self.camFormWidget = QtWidgets.QWidget(self)
-        self.camFormWidget.setGeometry(QtCore.QRect(265, 0, 320, 320))
+        self.camFormWidget.setGeometry(QtCore.QRect(265, 0, 250, 320))
         self.camFormWidget.setObjectName("CamFormWidget")
 
         self.camLayout = QFormLayout(self.camFormWidget)
@@ -294,6 +294,11 @@ class Ui_MainWindow(PageWindow):
         buttonHeight = 40
         btnSize = QtCore.QSize(buttonWidth, buttonHeight)
         btnSizeStart = QtCore.QSize(200, 60)
+
+        self.picLabel = QLabel(self.centralwidget)
+        self.picLabel.setGeometry(20, 20, 520, 400)
+        self.pixmap = QPixmap(os.getcwd() + "\\Frontend_Pakete\\data\\test.jpeg")
+        self.picLabel.setPixmap(self.pixmap)
 
         self.statusBar = QtWidgets.QStatusBar(self.centralwidget)
         self.statusBar.setGeometry(QtCore.QRect(0, 450, 800, 20))
@@ -430,7 +435,7 @@ class Ui_MainWindow(PageWindow):
                 while True:
                     self.initScan.aufnahme()
                     angle = float(self.arduino.winkel())
-                    self.colorInit = self.initScan.color_img()
+                    self.colorInit = self.initScan.color_img() # bild
                     self.depthInit = self.initScan.depth_img()
                     self.intrinInit = self.initScan.intrinsics()
 
@@ -462,19 +467,22 @@ class Ui_MainWindow(PageWindow):
         """Startet QFileDialog. Eine .ply oder .stl Datei kann ausgewählt werden. """
         fDialog = QFileDialog(self)
         fDialog.setFileMode(QFileDialog.Directory)
-        fDialog.setNameFilter("PC Format (*.pcd)")
+        fDialog.setNameFilter("PC Format (*.ply)")
+        options = QFileDialog.Options()
 
-        fileDialog, _ = fDialog.getOpenFileName(self, "Punktwolke Datei öffnen", "",
-                                                "PC Format (*.pcd)")
+        options |= QFileDialog.DontUseCustomDirectoryIcons
+
+        fileDialog, _ = fDialog.getOpenFileName(self, "Punktwolke Datei oeffnen", directory="C:\\Users",
+                                                filter="PC Format (*.ply)", options=options)
         print(fileDialog)
-        o3d.visualization.draw_geometries(fileDialog)
+
         file_path, file_ext = os.path.splitext(fileDialog)
 
         if file_ext == ".ply":
-            dataPath = "./Frontend_Pakete/data/importedPLYFile.pcd"
+            dataPath = "./Frontend_Pakete/data/importedPLYFile.ply"
             shutil.copy(fileDialog, dataPath)
 
-            PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.pcd"
+            PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.ply"
             pcd = o3d.io.read_point_cloud(PLYFile)
 
             if o3d.io.read_point_cloud(PLYFile):
@@ -484,8 +492,8 @@ class Ui_MainWindow(PageWindow):
                                               width=500,
                                               height=500,
                                               window_name="Imported Point Cloud")
-            self.processFotos.hauptPointCloud = pcd
-            print(self.processFotos.hauptPointCloud)
+            self.processFotos.main_pcd = pcd
+            print(self.processFotos.main_pcd)
 
     def saveFile(self):
 
@@ -530,14 +538,14 @@ class Ui_MainWindow(PageWindow):
 class Window(QMainWindow):
     def __init__(self):
         super().__init__(parent=None)
-        width = 800
-        height = 470
+        windowWidth = 800
+        windowHeight = 470
 
         self.setWindowTitle("3D Scanner")
         self.setObjectName("MainWindow")
-        self.resize(width, height)
-        self.setMaximumSize(QtCore.QSize(width, height))
-        self.setMinimumSize(QtCore.QSize(width, height))
+        self.resize(windowWidth, windowHeight)
+        self.setMaximumSize(QtCore.QSize(windowWidth, windowHeight))
+        self.setMinimumSize(QtCore.QSize(windowWidth, windowHeight))
 
         self.stacked_widget = QtWidgets.QStackedWidget()
         self.setCentralWidget(self.stacked_widget)

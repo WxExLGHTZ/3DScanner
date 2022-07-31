@@ -1,11 +1,9 @@
 #!/usr/bin/python
-import PyQt5.QtWidgets
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QTimer, QPoint, pyqtSlot, pyqtSignal, QEvent, QObject
-from PyQt5.QtWidgets import QWidget, QAction, QHBoxLayout, QFileDialog
-from PyQt5.QtGui import QIntValidator, QFont, QPixmap
-import open3d as o3d
+from PyQt5.QtCore import  QPoint, pyqtSlot
+from PyQt5.QtWidgets import  QAction,  QFileDialog
+from PyQt5.QtGui import QIntValidator
 import sys
 import os
 import shutil
@@ -13,8 +11,6 @@ import ntpath
 
 from Software.Backend_Pakete.export_scan import *
 from Software.Backend_Pakete.scan import *
-# from Software.Backend_Pakete.arduino_Portcheck import *
-# from Software.Backend_Pakete.proviMain import *
 from Software.Backend_Pakete.arduino import *
 from Software.Backend_Pakete.initialize_scan import *
 from Software.Backend_Pakete.process_data import *
@@ -95,9 +91,9 @@ class SettingsWindow(PageWindow):
         inputHeight = 30
         self.onlyInt = QIntValidator()  # Allows only integer inside QText
 
-        # self.statusBar = QtWidgets.QStatusBar(self)
-        # self.statusBar.setGeometry(QtCore.QRect(0, 430, 800, 20))
-        # self.statusBar.showMessage("Statusbar test")
+        self.statusBar = QtWidgets.QStatusBar(self)
+        self.statusBar.setGeometry(QtCore.QRect(0, 430, 800, 20))
+
 
         self.headerLabelArduino = QtWidgets.QLabel(self)
         self.headerLabelArduino.setText("Arduino Settings")
@@ -295,12 +291,13 @@ class Ui_MainWindow(PageWindow):
         btnSize = QtCore.QSize(buttonWidth, buttonHeight)
         btnSizeStart = QtCore.QSize(200, 60)
 
-        #self.pixmap = QPixmap("data/test.jpg")
-
-        #self.setMouseTracking(True)
 
 
 
+        self.picLabel = QLabel(self.centralwidget)
+
+        self.picLabel.setStyleSheet("background-color: black")
+        self.picLabel.setGeometry(20, 20, 520, 400)
 
 
         self.statusBar = QtWidgets.QStatusBar(self.centralwidget)
@@ -358,8 +355,7 @@ class Ui_MainWindow(PageWindow):
 
         self.verticalLayout.addWidget(self.helpButton)
 
-        # spacerItem2 = QtWidgets.QSpacerItem(200, 200, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        # self.verticalLayout.addItem(spacerItem2)
+
 
         self.quitButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
         self.quitButton.setMinimumSize(btnSize)
@@ -386,7 +382,7 @@ class Ui_MainWindow(PageWindow):
         exitAction.triggered.connect(self.quitApp)
 
         self.showPCButton.setEnabled(False)
-        # self.importButton.setEnabled(False)
+
         self.saveButton.setEnabled(False)
 
         self.retranslateUi(self)
@@ -449,18 +445,16 @@ class Ui_MainWindow(PageWindow):
                     angle = float(self.arduino.winkel())
                     self.colorInit = self.initScan.color_img() # bild
 
-                   # self.pixmap = self.colorInit
-                    #self.picLabel.setPixmap(self.pixmap)
+
                     self.depthInit = self.initScan.depth_img()
                     self.intrinInit = self.initScan.intrinsics()
 
                     self.arduino.rotieren(stepSize)
-                    # self.processFotos = ProcessData().processFoto(angle, self.depthInit, self.colorInit, self.intrinInit)
                     self.statusBar.showMessage("Scan Prozess bei: " + str(angle))
                     self.processFotos.konvertieren(angle, self.depthInit, self.colorInit, self.intrinInit)
                     self.arduino.warteAufRotation()
 
-                    if angle >= 10:
+                    if angle >= 360:
                         break
 
             except:
@@ -469,16 +463,12 @@ class Ui_MainWindow(PageWindow):
                 self.showPCButton.setEnabled(True)
                 self.saveButton.setEnabled(True)
 
-                #qimage = ImageQt(self.colorInit).copy()
-                #pixmap = QPixmap.fromImage(qimage)
-                #self.picLabel.setPixmap(pixmap)
-                # self.importButton.setEnabled(True)
 
                 self.initScan.pipelineStoppen()
                 self.arduino.close()
                 self.statusBar.showMessage("Scan beendet.")
 
-                print("ende process")
+                print("process ende ")
         else:
             print("error, please check connections")
 
@@ -490,14 +480,11 @@ class Ui_MainWindow(PageWindow):
 
     def importFile(self):
         """Startet QFileDialog. Eine .ply oder .stl Datei kann ausgewählt werden. """
-        fDialog = QFileDialog(self)
-        fDialog.setFileMode(QFileDialog.Directory)
-        fDialog.setNameFilter("PC Format (*.ply)")
+
         options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
 
-        options |= QFileDialog.DontUseCustomDirectoryIcons
-
-        fileDialog, _ = fDialog.getOpenFileName(self, "Punktwolke Datei oeffnen", directory="C:\\Users",
+        fileDialog, _ = QFileDialog.getOpenFileName(self, "Punktwolke Datei oeffnen",
                                                 filter="PC Format (*.ply)", options=options)
         print(fileDialog)
 
@@ -510,15 +497,14 @@ class Ui_MainWindow(PageWindow):
             PLYFile = os.getcwd() + "/Frontend_Pakete/data/importedPLYFile.ply"
             pcd = o3d.io.read_point_cloud(PLYFile)
 
-            if o3d.io.read_point_cloud(PLYFile):
-                self.saveButton.setEnabled(True)
+
 
             o3d.visualization.draw_geometries([pcd],
                                               width=500,
                                               height=500,
                                               window_name="Imported Point Cloud")
-            self.processFotos.main_pcd = pcd
-            print(self.processFotos.main_pcd)
+            #self.processFotos.main_pcd = pcd
+            #print(self.processFotos.main_pcd)
 
     def saveFile(self):
 
@@ -528,23 +514,26 @@ class Ui_MainWindow(PageWindow):
         o3d.visualization.draw_geometries([self.STL])
 
         # saveSTL
+        try:
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
 
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
+            os.chdir("..")
+            os.chdir("..")
+            os.chdir("..")
+            self.file = QFileDialog.getSaveFileName(self, "Save STL", options=options)
 
-        os.chdir("..")
-        os.chdir("..")
-        os.chdir("..")
-        self.file = QFileDialog.getSaveFileName(self, "Save STL", options=options)
+            print(str(ntpath.basename(self.file[0])))
 
-        print(str(ntpath.basename(self.file[0])))
+            print(ntpath.dirname(self.file[0]))
 
-        print(ntpath.dirname(self.file[0]))
+            os.chdir(ntpath.dirname(self.file[0]))
 
-        os.chdir(ntpath.dirname(self.file[0]))
 
-        o3d.io.write_triangle_mesh(str(ntpath.basename(self.file[0])) + ".stl", self.STL)
 
+            o3d.io.write_triangle_mesh(str(ntpath.basename(self.file[0])) + ".stl", self.STL)
+        except:
+            print("kein save")
         """Speichern der Punktwolke/Mesh file (.stl)"""
 
     def quitApp(self):
@@ -596,8 +585,6 @@ class Window(QMainWindow):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    # seting = SettingsWindow()
-    # seting.show()
     w = Window()
     w.show()
     sys.exit(app.exec_())

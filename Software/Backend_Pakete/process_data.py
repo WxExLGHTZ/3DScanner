@@ -16,6 +16,9 @@ class ProcessData():
         self.dtr = np.pi / 180
         self.distance = 0.258
 
+
+#konvertieren der aufgenommenen Daten in Punktwolken
+
     def konvertieren(self, angle, depth_image, color_image, intrinsic):
 
         print(angle)
@@ -43,6 +46,8 @@ class ProcessData():
         self.pointCloud, self.ind = self.pointCloud.remove_statistical_outlier(nb_neighbors=100, std_ratio=2)
         self.hauptPointCloud = self.hauptPointCloud + self.pointCloud
 
+
+#Punktwolke zurückgeben
     def getPointcloud(self):
         return self.hauptPointCloud
 

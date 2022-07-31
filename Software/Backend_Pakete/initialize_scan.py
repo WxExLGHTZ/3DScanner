@@ -34,6 +34,8 @@ class InitializeScan():
         self.px = None
         self.py = None
 
+
+#pipeline zur kamera starten
     def pipelineStarten(self):
 
         self.thePipeline.start(self.theConfig)
@@ -41,7 +43,7 @@ class InitializeScan():
 
         print("Pipeline gestartet")
 
-
+# pipeline zur kamera beenden
     def pipelineStoppen(self):
 
         self.thePipeline.stop()
@@ -51,7 +53,7 @@ class InitializeScan():
         print("Pipeline gestopt")
 
 
-
+#aufnahme der Daten durch kamera
     def aufnahme(self):
 
 
@@ -71,26 +73,25 @@ class InitializeScan():
         self.color_frame = self.cadrageSet.get_color_frame()
         self.depth_frame = self.cadrageSet.get_depth_frame()
 
+
+#intrinsische matrix
     def intrinsics(self):
 
         self.intrinsic = o3d.camera.PinholeCameraIntrinsic(self.w, self.h, self.fx, self.fy, self.px, self.py)
 
         return self.intrinsic
 
-
-
+#tiefendaten
     def depth_img(self):
         self.depth_image = np.asanyarray(self.depth_frame.get_data())
 
         return self.depth_image
 
-
-
+#rgb daten
     def color_img(self):
         self.color_image = np.asanyarray(self.color_frame.get_data())
 
         return self.color_image
-
-
+#gibt bilddaten zurück
     def bildArray(self):
         return self.color_image

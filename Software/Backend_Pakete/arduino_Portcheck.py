@@ -2,7 +2,7 @@ import serial.tools.list_ports
 import pyrealsense2 as rs
 
 
-
+#check ob arduino verbunden ist und ausgabe des Coms
 def check_arduino_connection():
     ports = list(serial.tools.list_ports.comports())
 
@@ -22,7 +22,7 @@ def check_arduino_connection():
 
     return False
 
-
+#check verbindung der Kamera
 def check_realsense_connection():
     try:
         pipe = rs.pipeline()

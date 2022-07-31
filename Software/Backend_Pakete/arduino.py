@@ -7,11 +7,11 @@ class Arduino():
         self.comPort = comPort
         self.baudRate = baudRate
         self.timeout = timeout
-        #self.gesamtWinkel = 0
         self.serPort = serial.Serial(self.comPort, self.baudRate, timeout=self.timeout)
         time.sleep(2)
         self.curstep = 0
 
+#rotationsbefehl an arduino
     def rotieren(self, steps):
         self.steps = steps
         self.neg = int(self.steps < 0)
@@ -24,6 +24,7 @@ class Arduino():
         for i in range(len(self.stepsString)):
             self.serPort.write([int(self.stepsString[i])])
 
+#warten auf ende der rotation
     def warteAufRotation(self):
         while True:
             self.data = str(self.serPort.readline())
@@ -34,6 +35,7 @@ class Arduino():
                     raise Exception("The Arduino returned the wrong number of steps!")
                 break
 
+#gibt den winkel der ROtation zurück
     def winkel(self):
         self.gearRatio = 6
         self.currentAngle = ((self.curstep * 360) / 2048) / self.gearRatio

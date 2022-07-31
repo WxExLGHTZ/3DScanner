@@ -5,6 +5,8 @@ import numpy as np #pip install numpy
 
 class ExportScan():
 
+
+#erstellt stl aus Punktwolke
     def stlErstellen(self, kpoints, stdRatio, depth, iterations, hauptPointcloud):
 
         self.stlPointclod = hauptPointcloud

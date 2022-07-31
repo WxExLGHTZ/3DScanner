@@ -295,10 +295,12 @@ class Ui_MainWindow(PageWindow):
         btnSize = QtCore.QSize(buttonWidth, buttonHeight)
         btnSizeStart = QtCore.QSize(200, 60)
 
+        #self.pixmap = QPixmap("/Users/vinh/aauni/Fachuebergreifendesprojekt/hauptprogramm/03-3dscanner/Software/Frontend_Pakete/data/test.jpg")
+        self.pixmap = QPixmap()
         self.picLabel = QLabel(self.centralwidget)
+
+        self.picLabel.setStyleSheet("background-color: black")
         self.picLabel.setGeometry(20, 20, 520, 400)
-        self.pixmap = QPixmap(os.getcwd() + "\\Frontend_Pakete\\data\\test.jpeg")
-        self.picLabel.setPixmap(self.pixmap)
 
         self.statusBar = QtWidgets.QStatusBar(self.centralwidget)
         self.statusBar.setGeometry(QtCore.QRect(0, 450, 800, 20))
@@ -436,6 +438,7 @@ class Ui_MainWindow(PageWindow):
                     self.initScan.aufnahme()
                     angle = float(self.arduino.winkel())
                     self.colorInit = self.initScan.color_img() # bild
+                    self.pixmap = self.colorInit
                     self.depthInit = self.initScan.depth_img()
                     self.intrinInit = self.initScan.intrinsics()
 

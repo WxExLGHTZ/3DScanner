@@ -54,12 +54,12 @@ class HelpWindow(PageWindow):
         self.setMinimumSize(QtCore.QSize(width, height))
         self.text = QPlainTextEdit(self)
         self.text.insertPlainText("Anleitung\n\n\n"
-                                  "Vor der Nutzung sollte die Serial Ports richtig gesetzt werden. Dies findest du unter dem Button \"Settings Knopf\"\n\n"
+                                  "Vor der Nutzung sollten die Serial Ports richtig gesetzt werden. Diese findest du unter dem Button \"Settings Knopf\"\n\n"
                                   "Liegt das Objekt auf der Plattform, so kann der Scan gestartet werden -> \"Start Scan Knopf\""
                                   "\nDieser Prozess dauert weniger als 1 Minute.\n\n"
-                                  "Nach dem Scan wird das gescannte Objekt als Punktwolke auf der linken Seite des Programms angezeigt."
-                                  "Diese Punktwolke kann anschließend als .stl Datei umgewandelt werden und abgespeichert werden ->\"Save Knopf\""
-                                  "\n\nMit \"Import\"-Knopf kann eine .stl oder eine Punktwolke Datei eingefügt werden und man kann diese dann anschließend"
+                                  "Nach dem Scan wird das gescannte Objekt als Punktwolke angezeigt."
+                                  "Diese Punktwolke kann anschliessend als .stl Datei umgewandelt werden und abgespeichert werden ->\"Save Knopf\""
+                                  "\n\nMit \"Import\"-Knopf kann eine eine Punktwolken Datei eingefuegt werden und man kann diese dann anschliessend"
                                   "im 3D-Viewer anschauen."
                                   "\nMit \"Exit\"-Knopf wird das Programm beendet.")
         self.text.move(10, 10)
@@ -394,7 +394,7 @@ class Ui_MainWindow(PageWindow):
         self.startScanButton.setText(_translate("MainWindow", "Start Scan"))
         self.showPCButton.setText(_translate("MainWindow", "Show Pointcloud"))
         self.importButton.setText(_translate("MainWindow", "Import"))
-        self.saveButton.setText(_translate("MainWindow", "Save"))
+        self.saveButton.setText(_translate("MainWindow", "Save STL"))
         self.settingsButton.setText(_translate("MainWindow", "Settings"))
         self.quitButton.setText(_translate("MainWindow", "Quit"))
         self.helpButton.setText(_translate("MainWindow", "Help"))

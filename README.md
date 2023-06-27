@@ -31,10 +31,10 @@ Voraussetzungen:
 
 1. Installieren Sie [Python3.8](https://www.python.org/downloads/release/python-380/) den Windows x86-64 executable installer
 
-2. Nach der Installation im Pfad "03-3dscanner\Software" eine eigene virtuelle Umgebung anlegen. Öffne anschließend die Kommandozeile als Adminstrator und navigiere zu oben genannten Pfad.
+2. Nach der Installation im Pfad "Software" eine eigene virtuelle Umgebung anlegen. Öffne anschließend die Kommandozeile als Adminstrator und navigiere zu oben genannten Pfad.
 
 ```cmd
->  cd 03-3dscanner\Software
+>  cd Software
 ```
 
 3. Geben Sie anschließend folgendes ein:
@@ -57,9 +57,3 @@ Es muss der komplette Pfad der Python.exe ohne Klammern angegeben werden!
 ```cmd
 (venv) > pip install -r requirements.txt
 ```
-
-## Hinweise
-
-- Legen Sie Ihre Daten zwingend in die jeweiligen Unterordner ab!
-- Fügen Sie am Ende in das `README.md` Installationshinweise und Hinweise für das Setup Ihres Projektergebnisses ein!
-- Sie können unterschiedliche Branches verwenden, Ergebnisse und Abgaben müssen aber im Master-Branch eingecheckt werden.
